@@ -5,15 +5,15 @@ from utils import calculate_loss_distribution, reorder_creditors
 from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 
-def render_bank_management():
+def render_bank_values():
     st.header("Bank Management")
 
     # Add new bank
-    st.subheader("Add New Bank")
-    new_bank_name = st.text_input("Bank Name")
-
-    if new_bank_name and new_bank_name not in st.session_state.current_bank_data:
-        if st.button("Add Bank"):
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_bank_name = st.text_input("New Bank Name")
+    with col2:
+        if st.button("Add Bank") and new_bank_name and new_bank_name not in st.session_state.current_bank_data:
             # Initialize with default values scaled to 50% of Bank A
             st.session_state.current_bank_data[new_bank_name] = {
                 "total_assets": DEFAULT_BANKS["Bank A"]["total_assets"] * 0.5,
@@ -23,37 +23,42 @@ def render_bank_management():
             st.success(f"Added {new_bank_name}")
             st.rerun()
 
-    # Remove existing bank
-    st.subheader("Remove Bank")
-    bank_to_remove = st.selectbox("Select Bank to Remove", 
-                                options=[b for b in st.session_state.current_bank_data.keys()
-                                       if b != "Bank A"])  # Prevent removing Bank A
+    # Remove bank
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        bank_to_remove = st.selectbox(
+            "Select Bank to Remove",
+            options=[b for b in st.session_state.current_bank_data.keys() if b != "Bank A"],
+            key="remove_bank_selector"
+        )
+    with col2:
+        if bank_to_remove and st.button("Remove Bank"):
+            del st.session_state.current_bank_data[bank_to_remove]
+            st.success(f"Removed {bank_to_remove}")
+            st.rerun()
 
-    if bank_to_remove and st.button("Remove Bank"):
-        del st.session_state.current_bank_data[bank_to_remove]
-        st.success(f"Removed {bank_to_remove}")
-        st.rerun()
-
-def render_bank_values():
+    # Display bank values
     st.header("Bank Values")
 
-    # Create a DataFrame for better display
+    # Create DataFrame for bank values display
     data = []
     for bank_name, bank_data in st.session_state.current_bank_data.items():
-        row = {"Bank": bank_name}
-        row.update({k: v for k, v in bank_data.items() if k != "total_assets"})
+        row = {}
+        row["Bank"] = bank_name
+        for k, v in bank_data.items():
+            if k != "total_assets":
+                row[k] = v  # Keep as numeric value
         data.append(row)
 
     df = pd.DataFrame(data)
+    display_df = df.copy()
 
-    # Display as table with formatting
-    st.dataframe(
-        df.style.format("{:,.2f}").set_table_styles([
-            {'selector': 'th', 'props': [('background-color', '#f0f2f6')]},
-            {'selector': 'td', 'props': [('text-align', 'right')]}
-        ]),
-        use_container_width=True
-    )
+    # Format all numeric columns
+    numeric_cols = [col for col in df.columns if col != "Bank"]
+    for col in numeric_cols:
+        display_df[col] = df[col].apply(lambda x: "{:,.2f}".format(float(x)))
+
+    st.dataframe(display_df, use_container_width=True)
 
 def main():
     # Apply custom styles
@@ -68,7 +73,7 @@ def main():
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
 
     # Create tabs
-    tab1, tab2, tab3 = st.tabs(["Loss Distribution", "Bank Values", "Bank Management"])
+    tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
     with tab1:
         # Sidebar for controls
@@ -214,9 +219,6 @@ def main():
 
     with tab2:
         render_bank_values()
-
-    with tab3:
-        render_bank_management()
 
 if __name__ == "__main__":
     main()
