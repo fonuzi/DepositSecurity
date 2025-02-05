@@ -1,0 +1,27 @@
+Objective:
+
+I need your expertise in Deposit Insurance and creditor hierarchy tools to help create a dynamic loss distribution model based on creditor rankings, specifically for resolution scenarios. The goal is to recreate Figure 3 from Table 6A, focusing on the resolution aspect.
+
+Context:
+
+The analysis will apply to the Albanian banking sector, using EUR as the currency. For simplicity, the model will include a selection of Albanian banks and will visually represent the loss distribution based on creditor hierarchy. The stacked bar chart should illustrate how losses are distributed among creditors during a resolution process, depending on the order in which creditors are addressed.
+
+Key Requirements:
+
+Dynamic Creditor Hierarchy:
+
+The model should allow flexibility in adjusting the creditor hierarchy (i.e., changing the order of creditors), such as moving the Single Resolution Fund (SRF) ahead of other creditors to see how the loss distribution changes.
+
+Resolution Loss Distribution:
+
+The model should include stacked bars in a PowerBI chart where each segment of the bar represents the loss allocated to each creditor based on their position in the hierarchy. The focus is on how the stress test results will affect the loss allocation in real-time.
+
+Visualization:
+
+The output will be a visual tool that allows users to see the loss distribution by creditors with the option to adjust the creditor order and observe the corresponding impact. The graphical bars should dynamically adjust as the hierarchy is altered.
+
+PowerBI Walkthrough:
+
+Please provide a detailed, step-by-step guide to build this interactive tool in PowerBI, ensuring that the process is smooth and that the user can easily manipulate the data for different resolution scenarios.
+
+This version breaks down your request into clear steps and clarifies the expected output. It emphasizes the dynamic functionality you're looking for and the need for a PowerBI solution. Would you like me to go further into any part of this plan?
