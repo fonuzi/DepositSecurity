@@ -80,20 +80,21 @@ def main():
         with st.sidebar:
             st.header("Configuration")
 
-            # Bank selection
-            selected_bank = st.selectbox(
-                "Select Bank",
-                options=st.session_state.current_bank_data.keys(),
+            # Bank selection (multiple)
+            selected_banks = st.multiselect(
+                "Select Banks to Compare",
+                options=list(st.session_state.current_bank_data.keys()),
+                default=[list(st.session_state.current_bank_data.keys())[0]],
                 key="bank_selector"
             )
 
-            # Total loss input
-            total_loss = st.number_input(
-                "Total Loss (EUR)",
+            # Total loss input (percentage of total assets)
+            loss_percentage = st.slider(
+                "Loss Percentage of Total Assets",
                 min_value=0.0,
-                value=st.session_state.current_bank_data[selected_bank]["total_assets"] * 0.1,
-                step=1000000.0,
-                format="%f"
+                max_value=100.0,
+                value=10.0,
+                step=1.0
             )
 
             # Creditor hierarchy management
@@ -104,82 +105,91 @@ def main():
             for idx, creditor in enumerate(st.session_state.creditor_order):
                 st.write(f"### {idx + 1}. {creditor}")
 
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+                # Display current selected bank's value
+                if len(selected_banks) > 0:
+                    selected_bank = selected_banks[0]  # Use first selected bank for editing
+                    col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
 
-                # Value input
-                with col1:
-                    st.session_state.current_bank_data[selected_bank][creditor] = st.number_input(
-                        "Value (EUR)",
-                        value=float(st.session_state.current_bank_data[selected_bank][creditor]),
-                        key=f"value_{creditor}_{selected_bank}",
-                        step=1000000.0,
-                        format="%f",
-                        label_visibility="collapsed"
-                    )
+                    # Value input
+                    with col1:
+                        st.session_state.current_bank_data[selected_bank][creditor] = st.number_input(
+                            "Value (EUR)",
+                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
+                            key=f"value_{creditor}_{selected_bank}",
+                            step=1000000.0,
+                            format="%f",
+                            label_visibility="collapsed"
+                        )
 
-                # Up button
-                with col2:
-                    if idx > 0:  # Can move up
-                        if st.button("↑", key=f"up_{creditor}"):
-                            st.session_state.creditor_order = reorder_creditors(
-                                st.session_state.creditor_order,
-                                creditor,
-                                idx - 1
-                            )
+                    # Up button
+                    with col2:
+                        if idx > 0:  # Can move up
+                            if st.button("↑", key=f"up_{creditor}"):
+                                st.session_state.creditor_order = reorder_creditors(
+                                    st.session_state.creditor_order,
+                                    creditor,
+                                    idx - 1
+                                )
+                                st.rerun()
+
+                    # Down button
+                    with col3:
+                        if idx < len(st.session_state.creditor_order) - 1:  # Can move down
+                            if st.button("↓", key=f"down_{creditor}"):
+                                st.session_state.creditor_order = reorder_creditors(
+                                    st.session_state.creditor_order,
+                                    creditor,
+                                    idx + 1
+                                )
+                                st.rerun()
+
+                    # Reset value button
+                    with col4:
+                        if st.button("Reset", key=f"reset_{creditor}_{selected_bank}"):
+                            st.session_state.current_bank_data[selected_bank][creditor] = DEFAULT_BANKS[selected_bank][creditor]
                             st.rerun()
-
-                # Down button
-                with col3:
-                    if idx < len(st.session_state.creditor_order) - 1:  # Can move down
-                        if st.button("↓", key=f"down_{creditor}"):
-                            st.session_state.creditor_order = reorder_creditors(
-                                st.session_state.creditor_order,
-                                creditor,
-                                idx + 1
-                            )
-                            st.rerun()
-
-                # Reset value button
-                with col4:
-                    if st.button("Reset", key=f"reset_{creditor}_{selected_bank}"):
-                        st.session_state.current_bank_data[selected_bank][creditor] = DEFAULT_BANKS[selected_bank][creditor]
-                        st.rerun()
 
         # Main content area for Loss Distribution
-        col1, col2 = st.columns([2, 1])
-
-        with col1:
-            # Calculate loss distribution
-            loss_data = calculate_loss_distribution(
-                total_loss,
-                st.session_state.current_bank_data[selected_bank],
-                DEFAULT_CREDITORS,
-                st.session_state.creditor_order
-            )
+        if not selected_banks:
+            st.warning("Please select at least one bank to display.")
+        else:
+            # Calculate loss distribution for each selected bank
+            all_loss_data = {}
+            for bank in selected_banks:
+                total_loss = st.session_state.current_bank_data[bank]["total_assets"] * (loss_percentage / 100)
+                all_loss_data[bank] = calculate_loss_distribution(
+                    total_loss,
+                    st.session_state.current_bank_data[bank],
+                    DEFAULT_CREDITORS,
+                    st.session_state.creditor_order
+                )
 
             # Create stacked bar chart
             fig = go.Figure()
 
-            # Add bars for each creditor
-            y_position = 0
-            for creditor in st.session_state.creditor_order:
-                loss_amount = loss_data[creditor]
-                fig.add_trace(go.Bar(
-                    name=creditor,
-                    y=[loss_amount],
-                    x=['Loss Distribution'],
-                    marker_color=DEFAULT_CREDITORS[creditor]['color'],
-                    text=f'€{loss_amount:,.0f}',
-                    textposition='inside',
-                ))
-                y_position += loss_amount
+            # Add bars for each bank and creditor
+            for bank in selected_banks:
+                loss_data = all_loss_data[bank]
+                bank_total = sum(loss_data.values())
+
+                for creditor in st.session_state.creditor_order:
+                    loss_amount = loss_data[creditor]
+                    fig.add_trace(go.Bar(
+                        name=creditor,
+                        x=[bank],
+                        y=[loss_amount],
+                        marker_color=DEFAULT_CREDITORS[creditor]['color'],
+                        text=f'€{loss_amount:,.0f}',
+                        textposition='inside',
+                    ))
 
             # Update layout
             fig.update_layout(
                 barmode='stack',
                 height=600,
-                title="Loss Distribution by Creditor Hierarchy",
+                title=f"Loss Distribution by Creditor Hierarchy ({loss_percentage}% Loss)",
                 yaxis_title="Loss Amount (EUR)",
+                xaxis_title="Banks",
                 showlegend=True,
                 legend_title="Creditor Type",
                 font=dict(size=12),
@@ -187,35 +197,46 @@ def main():
 
             st.plotly_chart(fig, use_container_width=True)
 
-        with col2:
-            # Summary statistics
+            # Summary statistics for each selected bank
             st.subheader("Summary Statistics")
 
-            # Display total loss
-            st.metric("Total Loss", f"€{total_loss:,.2f}")
+            for bank in selected_banks:
+                st.write(f"### {bank}")
+                total_loss = st.session_state.current_bank_data[bank]["total_assets"] * (loss_percentage / 100)
+                loss_data = all_loss_data[bank]
 
-            # Display loss percentages
-            st.write("Loss Distribution (%)")
-            for creditor in st.session_state.creditor_order:
-                percentage = (loss_data[creditor] / total_loss) * 100
-                st.progress(percentage / 100)
-                st.write(f"{creditor}: {percentage:.1f}%")
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.metric("Total Loss", f"€{total_loss:,.2f}")
 
-        # Export functionality
-        if st.button("Export Data"):
-            df = pd.DataFrame({
-                'Creditor': st.session_state.creditor_order,
-                'Loss Amount': [loss_data[creditor] for creditor in st.session_state.creditor_order],
-                'Percentage': [(loss_data[creditor] / total_loss) * 100 for creditor in st.session_state.creditor_order]
-            })
+                with col2:
+                    for creditor in st.session_state.creditor_order:
+                        percentage = (loss_data[creditor] / total_loss) * 100
+                        st.progress(percentage / 100)
+                        st.write(f"{creditor}: {percentage:.1f}%")
 
-            csv = df.to_csv(index=False)
-            st.download_button(
-                label="Download CSV",
-                data=csv,
-                file_name="loss_distribution.csv",
-                mime="text/csv"
-            )
+            # Export functionality
+            if st.button("Export Data"):
+                export_data = []
+                for bank in selected_banks:
+                    loss_data = all_loss_data[bank]
+                    total_loss = st.session_state.current_bank_data[bank]["total_assets"] * (loss_percentage / 100)
+                    for creditor in st.session_state.creditor_order:
+                        export_data.append({
+                            'Bank': bank,
+                            'Creditor': creditor,
+                            'Loss Amount': loss_data[creditor],
+                            'Percentage': (loss_data[creditor] / total_loss) * 100
+                        })
+
+                df = pd.DataFrame(export_data)
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv,
+                    file_name="loss_distribution.csv",
+                    mime="text/csv"
+                )
 
     with tab2:
         render_bank_values()
