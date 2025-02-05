@@ -16,6 +16,10 @@ def main():
     if 'creditor_order' not in st.session_state:
         st.session_state.creditor_order = list(DEFAULT_CREDITORS.keys())
 
+    # Initialize bank data in session state if not exists
+    if 'current_bank_data' not in st.session_state:
+        st.session_state.current_bank_data = DEFAULT_BANKS.copy()
+
     # Sidebar for controls
     with st.sidebar:
         st.header("Configuration")
@@ -38,13 +42,26 @@ def main():
 
         # Creditor hierarchy management
         st.subheader("Creditor Hierarchy")
-        st.info("Use the buttons to reorder creditors")
+        st.info("Use the buttons to reorder creditors and adjust values")
 
-        # Display creditors with up/down buttons
+        # Display creditors with up/down buttons and value inputs
         for idx, creditor in enumerate(st.session_state.creditor_order):
-            col1, col2, col3 = st.columns([3, 1, 1])
+            st.write(f"### {idx + 1}. {creditor}")
+
+            col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+
+            # Value input
             with col1:
-                st.write(f"{idx + 1}. {creditor}")
+                st.session_state.current_bank_data[selected_bank][creditor] = st.number_input(
+                    "Value (EUR)",
+                    value=float(DEFAULT_BANKS[selected_bank][creditor]),
+                    key=f"value_{creditor}",
+                    step=1000000.0,
+                    format="%f",
+                    label_visibility="collapsed"
+                )
+
+            # Up button
             with col2:
                 if idx > 0:  # Can move up
                     if st.button("↑", key=f"up_{creditor}"):
@@ -54,6 +71,8 @@ def main():
                             idx - 1
                         )
                         st.rerun()
+
+            # Down button
             with col3:
                 if idx < len(st.session_state.creditor_order) - 1:  # Can move down
                     if st.button("↓", key=f"down_{creditor}"):
@@ -64,6 +83,12 @@ def main():
                         )
                         st.rerun()
 
+            # Reset value button
+            with col4:
+                if st.button("Reset", key=f"reset_{creditor}"):
+                    st.session_state.current_bank_data[selected_bank][creditor] = DEFAULT_BANKS[selected_bank][creditor]
+                    st.rerun()
+
     # Main content area
     col1, col2 = st.columns([2, 1])
 
@@ -71,7 +96,7 @@ def main():
         # Calculate loss distribution
         loss_data = calculate_loss_distribution(
             total_loss,
-            DEFAULT_BANKS[selected_bank],
+            st.session_state.current_bank_data[selected_bank],
             DEFAULT_CREDITORS,
             st.session_state.creditor_order
         )
