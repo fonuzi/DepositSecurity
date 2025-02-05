@@ -8,14 +8,18 @@ from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 def main():
     # Apply custom styles
     apply_styles()
-    
+
     st.title("Banking Sector Loss Distribution Model")
     st.subheader("Creditor Hierarchy Analysis Tool")
+
+    # Initialize session state for creditor order if not exists
+    if 'creditor_order' not in st.session_state:
+        st.session_state.creditor_order = list(DEFAULT_CREDITORS.keys())
 
     # Sidebar for controls
     with st.sidebar:
         st.header("Configuration")
-        
+
         # Bank selection
         selected_bank = st.selectbox(
             "Select Bank",
@@ -34,15 +38,31 @@ def main():
 
         # Creditor hierarchy management
         st.subheader("Creditor Hierarchy")
-        st.info("Drag and drop to reorder creditors")
-        
-        creditor_order = st.session_state.get('creditor_order', list(DEFAULT_CREDITORS.keys()))
-        new_order = st.multiselect(
-            "Adjust Creditor Order",
-            options=creditor_order,
-            default=creditor_order,
-            key="creditor_order"
-        )
+        st.info("Use the buttons to reorder creditors")
+
+        # Display creditors with up/down buttons
+        for idx, creditor in enumerate(st.session_state.creditor_order):
+            col1, col2, col3 = st.columns([3, 1, 1])
+            with col1:
+                st.write(f"{idx + 1}. {creditor}")
+            with col2:
+                if idx > 0:  # Can move up
+                    if st.button("↑", key=f"up_{creditor}"):
+                        st.session_state.creditor_order = reorder_creditors(
+                            st.session_state.creditor_order,
+                            creditor,
+                            idx - 1
+                        )
+                        st.rerun()
+            with col3:
+                if idx < len(st.session_state.creditor_order) - 1:  # Can move down
+                    if st.button("↓", key=f"down_{creditor}"):
+                        st.session_state.creditor_order = reorder_creditors(
+                            st.session_state.creditor_order,
+                            creditor,
+                            idx + 1
+                        )
+                        st.rerun()
 
     # Main content area
     col1, col2 = st.columns([2, 1])
@@ -53,15 +73,15 @@ def main():
             total_loss,
             DEFAULT_BANKS[selected_bank],
             DEFAULT_CREDITORS,
-            new_order
+            st.session_state.creditor_order
         )
 
         # Create stacked bar chart
         fig = go.Figure()
-        
+
         # Add bars for each creditor
         y_position = 0
-        for creditor in new_order:
+        for creditor in st.session_state.creditor_order:
             loss_amount = loss_data[creditor]
             fig.add_trace(go.Bar(
                 name=creditor,
@@ -89,13 +109,13 @@ def main():
     with col2:
         # Summary statistics
         st.subheader("Summary Statistics")
-        
+
         # Display total loss
         st.metric("Total Loss", f"€{total_loss:,.2f}")
-        
+
         # Display loss percentages
         st.write("Loss Distribution (%)")
-        for creditor in new_order:
+        for creditor in st.session_state.creditor_order:
             percentage = (loss_data[creditor] / total_loss) * 100
             st.progress(percentage / 100)
             st.write(f"{creditor}: {percentage:.1f}%")
@@ -103,11 +123,11 @@ def main():
     # Export functionality
     if st.button("Export Data"):
         df = pd.DataFrame({
-            'Creditor': new_order,
-            'Loss Amount': [loss_data[creditor] for creditor in new_order],
-            'Percentage': [(loss_data[creditor] / total_loss) * 100 for creditor in new_order]
+            'Creditor': st.session_state.creditor_order,
+            'Loss Amount': [loss_data[creditor] for creditor in st.session_state.creditor_order],
+            'Percentage': [(loss_data[creditor] / total_loss) * 100 for creditor in st.session_state.creditor_order]
         })
-        
+
         csv = df.to_csv(index=False)
         st.download_button(
             label="Download CSV",
