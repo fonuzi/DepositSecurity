@@ -5,7 +5,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "streamlit run main.py"]
+run = ["sh", "-c", "python app.py"]
 
 [workflows]
 runButton = "Project"
@@ -17,10 +17,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Streamlit App"
+args = "Flask App"
 
 [[workflows.workflow]]
-name = "Streamlit App"
+name = "Flask App"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -31,12 +31,16 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run main.py"
-waitForPort = 8501
+args = "python app.py"
+waitForPort = 8080
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [[ports]]
 localPort = 8501
