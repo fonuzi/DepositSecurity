@@ -8,9 +8,8 @@ from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 
 def format_currency(value):
-    """Format number with thousand separators using dots"""
+    """Format number with thousand separators using dots and currency symbol"""
     whole_part = int(value)
-    # Format with dots as thousand separators
     formatted = "{:,.0f}".format(whole_part).replace(",", ".")
     return f"€{formatted}"
 
@@ -18,6 +17,13 @@ def format_number(value):
     """Format number with thousand separators using dots, without currency symbol"""
     whole_part = int(value)
     return "{:,.0f}".format(whole_part).replace(",", ".")
+
+def parse_formatted_number(formatted_str):
+    """Convert formatted number string back to float"""
+    try:
+        return float(formatted_str.replace(".", ""))
+    except (ValueError, AttributeError):
+        return 0.0
 
 def render_bank_values():
     st.header("Bank Values")
@@ -101,35 +107,50 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    col1, col2, col3 = st.columns([2, 2, 1])
+                    col1, col2 = st.columns([2,3]) #Removed col3
 
                     with col1:
                         st.write(creditor)
 
                     with col2:
-                        current_value = float(st.session_state.current_bank_data[selected_bank][creditor])
-                        new_value = st.number_input(
+                        current_value = st.session_state.current_bank_data[selected_bank][creditor]
+                        formatted_value = format_number(current_value)
+
+                        new_value_str = st.text_input(
                             "Value (EUR)",
-                            min_value=0.0,
-                            value=current_value,
-                            step=1000000.0,
-                            format="%.0f",  # Use simple integer format
+                            value=formatted_value,
                             key=f"value_{creditor}_{selected_bank}",
                             label_visibility="collapsed"
                         )
-                        # Update the state with the new value
-                        st.session_state.current_bank_data[selected_bank][creditor] = new_value
 
-                    with col3:
-                        is_exempt = st.checkbox(
-                            "Exempt",
-                            value=creditor in st.session_state.exempt_creditors,
-                            key=f"exempt_{creditor}"
-                        )
-                        if is_exempt and creditor not in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.add(creditor)
-                        elif not is_exempt and creditor in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.remove(creditor)
+                        increment = st.button("+", key=f"plus_{creditor}")
+                        decrement = st.button("-", key=f"minus_{creditor}")
+
+                        try:
+                            new_value = parse_formatted_number(new_value_str)
+                            if increment:
+                                new_value += 1000000  # Increment by 1M
+                            elif decrement:
+                                new_value = max(0, new_value - 1000000)  # Decrement by 1M, not below 0
+
+                            st.session_state.current_bank_data[selected_bank][creditor] = new_value
+
+                            if new_value != parse_formatted_number(new_value_str):
+                                st.experimental_rerun()
+                        except ValueError:
+                            st.error(f"Invalid value for {creditor}")
+
+                    #Removed col3 and its content.  Checkbox moved to col2
+
+                    is_exempt = st.checkbox(
+                        "Exempt",
+                        value=creditor in st.session_state.exempt_creditors,
+                        key=f"exempt_{creditor}"
+                    )
+                    if is_exempt and creditor not in st.session_state.exempt_creditors:
+                        st.session_state.exempt_creditors.add(creditor)
+                    elif not is_exempt and creditor in st.session_state.exempt_creditors:
+                        st.session_state.exempt_creditors.remove(creditor)
 
                     # Add horizontal line after each creditor
                     st.markdown("---")
