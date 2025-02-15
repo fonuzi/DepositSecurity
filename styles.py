@@ -77,14 +77,21 @@ def apply_styles():
             margin-top: -0.5rem;
             display: inline-block;
         }
-        .stCheckbox label {
-            font-size: 14px;
-            color: #4b5563;
-        }
         /* Fix checkbox alignment */
         .stCheckbox > div[data-testid="stMarkdownContainer"] {
             display: inline-block;
             margin-left: 0.5rem;
+        }
+        /* Force horizontal layout for checkbox and label */
+        .stCheckbox > label {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        .stCheckbox > label > div {
+            margin: 0 !important;
+            padding: 0 !important;
         }
         </style>
     """, unsafe_allow_html=True)
