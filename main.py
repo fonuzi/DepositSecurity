@@ -38,17 +38,18 @@ def render_bank_values():
 def calculate_scenario_values(total_assets, scenario):
     """Calculate asset and liability values based on selected scenario"""
     if scenario == "FOLTF":
-        asset_ratio = 0.80
+        liability_percentage = 0.20  # 20% of assets moved to liabilities
     elif scenario == "Resolution Valuation":
-        asset_ratio = 0.70
+        liability_percentage = 0.30  # 30% of assets moved to liabilities
     elif scenario == "Liquidation Valuation":
-        asset_ratio = 0.60
+        liability_percentage = 0.40  # 40% of assets moved to liabilities
     else:
-        asset_ratio = 1.0  # Default case
+        liability_percentage = 0.0  # Default case
 
-    assets = total_assets * asset_ratio
-    liabilities = total_assets * (1 - asset_ratio)
-    return assets, liabilities
+    # Calculate values while maintaining total
+    liability_value = total_assets * liability_percentage
+    asset_value = total_assets - liability_value
+    return asset_value, liability_value
 
 def main():
     apply_styles()
@@ -77,10 +78,10 @@ def main():
                 "Select Scenario",
                 options=["Default", "FOLTF", "Resolution Valuation", "Liquidation Valuation"],
                 help="""
-                FOLTF: 80% Assets to 20% Liabilities
-                Resolution Valuation: 70% Assets to 30% Liabilities
-                Liquidation Valuation: 60% Assets to 40% Liabilities
-                Default: No split applied
+                FOLTF: Redistributes 20% of assets to liabilities
+                Resolution Valuation: Redistributes 30% of assets to liabilities
+                Liquidation Valuation: Redistributes 40% of assets to liabilities
+                Default: No redistribution applied
                 """
             )
 
