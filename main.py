@@ -35,7 +35,7 @@ def render_bank_values():
         row["Bank"] = bank_name
         for k, v in bank_data.items():
             if k != "total_assets":
-                row[k] = v
+                row[k] = v  # Keep as numeric value
         data.append(row)
 
     df = pd.DataFrame(data)
@@ -56,8 +56,7 @@ def main():
 
     # Initialize session states
     if 'creditor_order' not in st.session_state:
-        # Exclude Asset Absorption from sortable creditors
-        st.session_state.creditor_order = [c for c in DEFAULT_CREDITORS.keys() if c != "Asset Absorption"]
+        st.session_state.creditor_order = list(DEFAULT_CREDITORS.keys())
     if 'current_bank_data' not in st.session_state:
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
     if 'exempt_creditors' not in st.session_state:
@@ -69,25 +68,14 @@ def main():
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
     with tab1:
-        # Sidebar for controls
         with st.sidebar:
             st.header("Configuration")
 
             # Bank selection
-            selected_banks = st.multiselect(
-                "Select Banks to Compare",
+            selected_bank = st.selectbox(
+                "Select Bank",
                 options=list(st.session_state.current_bank_data.keys()),
-                default=[list(st.session_state.current_bank_data.keys())[0]],
                 key="bank_selector"
-            )
-
-            # Loss percentage input
-            loss_percentage = st.slider(
-                "Loss Percentage of Total Assets",
-                min_value=0.0,
-                max_value=100.0,
-                value=10.0,
-                step=1.0
             )
 
             # Creditor hierarchy management
@@ -102,29 +90,31 @@ def main():
                 st.rerun()
 
             # Display creditor values and exempt checkboxes
-            if len(selected_banks) > 0:
-                selected_bank = selected_banks[0]
+            if selected_bank:
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    col1, col2 = st.columns([2,3]) 
+                    col1, col2 = st.columns([2, 3])
 
                     with col1:
                         st.write(creditor)
 
                     with col2:
-                        current_value = st.session_state.current_bank_data[selected_bank][creditor]
-                        formatted_value = format_number(current_value)
+                        current_value = float(st.session_state.current_bank_data[selected_bank][creditor])
 
-                        # Number input with built-in spinners
+                        # Number input with dots format and spinners
                         new_value = st.number_input(
                             "Value (EUR)",
-                            value=float(current_value),
+                            min_value=0.0,
+                            value=current_value,
                             step=1000000.0,
+                            format="%.0f",
                             key=f"value_{creditor}_{selected_bank}",
-                            label_visibility="collapsed",
-                            format="%.0f"
+                            label_visibility="collapsed"
                         )
+
+                        # Update the displayed value with proper formatting
+                        st.markdown(f"<p style='font-size: 1rem; margin-top: -1rem;'>{format_number(new_value)}</p>", unsafe_allow_html=True)
 
                         # Update state if value changed
                         if new_value != current_value:
@@ -146,10 +136,11 @@ def main():
                     st.markdown("---")
 
         # Main content area for Loss Distribution
-        if not selected_banks:
+        if not selected_bank:
             st.warning("Please select at least one bank to display.")
         else:
             # Calculate loss distribution for each selected bank
+            selected_banks = [selected_bank] #Using selected bank from selectbox
             for bank in selected_banks:
                 st.subheader(f"{bank} Loss Distribution")
 
@@ -158,11 +149,11 @@ def main():
 
                 with col1:
                     total_assets = st.session_state.current_bank_data[bank]["total_assets"]
-                    total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
+                    total_loss = calculate_total_loss_with_absorption(total_assets, 10.0) #Using default value for loss percentage
 
                     # Create figure with two subplots side by side
                     fig = make_subplots(
-                        rows=1, cols=2, 
+                        rows=1, cols=2,
                         subplot_titles=("Assets", "Liabilities"),
                         column_widths=[0.4, 0.6],
                         horizontal_spacing=0.1
@@ -233,7 +224,7 @@ def main():
                         height=600,
                         showlegend=True,
                         barmode='stack',
-                        title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
+                        title=f"Loss Distribution Analysis (10% Loss)", #Using default value
                         legend_title="Components",
                     )
 
