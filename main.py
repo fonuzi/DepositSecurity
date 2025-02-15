@@ -10,7 +10,6 @@ from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 def format_currency(value):
     """Format number in millions with thousand separators using dots"""
     in_millions = value / 1000000
-    # Format with dots as thousand separators and show millions
     if in_millions >= 1:
         formatted = "{:,.1f}M".format(in_millions).replace(",", ".")
     else:
@@ -48,7 +47,6 @@ def main():
 
     # Initialize session states
     if 'creditor_order' not in st.session_state:
-        # Exclude Asset Absorption from sortable creditors
         st.session_state.creditor_order = [c for c in DEFAULT_CREDITORS.keys() if c != "Asset Absorption"]
     if 'current_bank_data' not in st.session_state:
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
@@ -56,12 +54,14 @@ def main():
         st.session_state.exempt_creditors = set()
     if 'graph_explanations' not in st.session_state:
         st.session_state.graph_explanations = {}
+    if 'creditor_names' not in st.session_state:
+        # Initialize with default names
+        st.session_state.creditor_names = {c: c for c in DEFAULT_CREDITORS.keys()}
 
     # Create tabs
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
     with tab1:
-        # Sidebar for controls
         with st.sidebar:
             st.header("Configuration")
 
@@ -82,16 +82,30 @@ def main():
                 step=1.0
             )
 
-            # Creditor hierarchy management
-            st.subheader("Creditor Hierarchy")
+            # Creditor name editing and hierarchy management
+            st.subheader("Creditor Names and Hierarchy")
             with st.container():
                 st.markdown("""
                     <div style='background-color: #f5f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-                        Drag and drop creditors to reorder
+                        Edit names and drag to reorder
                     </div>
                 """, unsafe_allow_html=True)
 
-                # Create sortable list for creditors
+                # Edit creditor names
+                edited_names = {}
+                for creditor in st.session_state.creditor_order:
+                    current_name = st.session_state.creditor_names[creditor]
+                    new_name = st.text_input(
+                        f"Name for {creditor}",
+                        value=current_name,
+                        key=f"name_{creditor}"
+                    )
+                    edited_names[creditor] = new_name
+
+                # Update session state with new names
+                st.session_state.creditor_names.update(edited_names)
+
+                # Create sortable list with custom names
                 sorted_creditors = sort_items(st.session_state.creditor_order)
 
                 if sorted_creditors != st.session_state.creditor_order:
@@ -104,7 +118,8 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
+                    display_name = st.session_state.creditor_names[creditor]
+                    st.markdown(f'<div class="creditor-name">{display_name}</div>', unsafe_allow_html=True)
 
                     # Input field
                     value = st.number_input(
@@ -125,15 +140,13 @@ def main():
                         "Exempt",
                         value=creditor in st.session_state.exempt_creditors,
                         key=f"exempt_{creditor}",
-                        help="Exclude this creditor from loss absorption",
-                        label_visibility="visible"
+                        help="Exclude this creditor from loss absorption"
                     )
                     if is_exempt and creditor not in st.session_state.exempt_creditors:
                         st.session_state.exempt_creditors.add(creditor)
                     elif not is_exempt and creditor in st.session_state.exempt_creditors:
                         st.session_state.exempt_creditors.remove(creditor)
 
-                    # Add horizontal line after each creditor except the last one
                     if creditor != st.session_state.creditor_order[-1]:
                         st.markdown('<hr class="creditor-divider">', unsafe_allow_html=True)
 
@@ -141,36 +154,31 @@ def main():
         if not selected_banks:
             st.warning("Please select at least one bank to display.")
         else:
-            # Calculate loss distribution for each selected bank
             for bank in selected_banks:
                 st.subheader(f"{bank} Loss Distribution")
 
-                # Create columns for graph and explanation
                 col1, col2 = st.columns([2, 1])
 
                 with col1:
                     total_assets = st.session_state.current_bank_data[bank]["total_assets"]
                     total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
 
-                    # Create figure with two subplots side by side
                     fig = make_subplots(
-                        rows=1, cols=2, 
-                        subplot_titles=("", ""),  # Removed subplot titles
+                        rows=1, cols=2,
+                        subplot_titles=("", ""),
                         column_widths=[0.4, 0.6],
                         horizontal_spacing=0.1
                     )
 
-                    # Asset bar
                     threshold_8_percent = total_assets * 0.08
                     remaining_asset_value = max(0, total_assets - total_loss)
                     loss_absorbed = min(total_loss, threshold_8_percent)
                     remaining_loss = max(0, total_loss - loss_absorbed)
 
-                    # Add asset bar components
                     fig.add_trace(
                         go.Bar(
                             name="Remaining Assets",
-                            x=[""],  # Removed x-axis label
+                            x=[""],
                             y=[remaining_asset_value],
                             marker_color="#2ecc71",
                             text=format_currency(remaining_asset_value),
@@ -183,7 +191,7 @@ def main():
                         fig.add_trace(
                             go.Bar(
                                 name="8% Loss Absorption",
-                                x=[""],  # Removed x-axis label
+                                x=[""],
                                 y=[loss_absorbed],
                                 marker_color="#e74c3c",
                                 text=format_currency(loss_absorbed),
@@ -192,7 +200,6 @@ def main():
                             row=1, col=1
                         )
 
-                    # Calculate creditor distribution
                     creditor_distribution = calculate_loss_distribution(
                         remaining_loss,
                         st.session_state.current_bank_data[bank],
@@ -201,7 +208,6 @@ def main():
                         st.session_state.exempt_creditors
                     )
 
-                    # Add creditor bars
                     for creditor in st.session_state.creditor_order:
                         if creditor in st.session_state.exempt_creditors:
                             continue
@@ -210,8 +216,8 @@ def main():
                         if loss_amount > 0:
                             fig.add_trace(
                                 go.Bar(
-                                    name=creditor,
-                                    x=[""],  # Removed x-axis label
+                                    name=st.session_state.creditor_names[creditor],  # Use custom name
+                                    x=[""],
                                     y=[loss_amount],
                                     marker_color=DEFAULT_CREDITORS[creditor]['color'],
                                     text=format_currency(loss_amount),
@@ -220,7 +226,6 @@ def main():
                                 row=1, col=2
                             )
 
-                    # Update layout
                     fig.update_layout(
                         height=600,
                         showlegend=True,
@@ -229,22 +234,19 @@ def main():
                         legend_title="Components",
                     )
 
-                    # Update axes to show values in millions
                     fig.update_xaxes(showticklabels=True)
                     fig.update_yaxes(
                         title_text="Amount (EUR)",
-                        tickformat=",.0f",  # Changed to show whole numbers
+                        tickformat=",.0f",
                         tickprefix="",
                         ticksuffix="M",
-                        # Convert the tick values to millions by dividing by 1M
                         tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
                         ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
-                        col=1  # Only show title on the first column
+                        col=1
                     )
-                    # Remove title and ticks from second y-axis
                     fig.update_yaxes(
                         title_text="",
-                        showticklabels=False,  # Hide tick labels on right side
+                        showticklabels=False,
                         tickformat=",.0f",
                         tickprefix="",
                         ticksuffix="M",
@@ -257,7 +259,6 @@ def main():
 
                 with col2:
                     st.markdown("### Graph Explanation")
-                    # Add text area for explanation
                     if bank not in st.session_state.graph_explanations:
                         st.session_state.graph_explanations[bank] = ""
 
@@ -270,7 +271,6 @@ def main():
                     )
                     st.session_state.graph_explanations[bank] = explanation
 
-                # Summary statistics below the graph and explanation
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
@@ -282,7 +282,6 @@ def main():
                 with col3:
                     st.metric("Remaining Loss", format_currency(remaining_loss))
 
-                # Detailed percentages
                 st.write("#### Distribution Percentages")
                 col1, col2 = st.columns(2)
 
@@ -300,7 +299,8 @@ def main():
                         loss_amount = creditor_distribution[creditor]
                         percentage = (loss_amount / total_loss) * 100 if total_loss > 0 else 0
                         st.progress(percentage / 100)
-                        st.write(f"{creditor}: {percentage:.1f}%")
+                        display_name = st.session_state.creditor_names[creditor]
+                        st.write(f"{display_name}: {percentage:.1f}%")
 
     with tab2:
         render_bank_values()
