@@ -241,9 +241,10 @@ def main():
                         ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
                         col=1  # Only show title on the first column
                     )
-                    # Remove title from second y-axis
+                    # Remove title and ticks from second y-axis
                     fig.update_yaxes(
                         title_text="",
+                        showticklabels=False,  # Hide tick labels on right side
                         tickformat=",.0f",
                         tickprefix="",
                         ticksuffix="M",
