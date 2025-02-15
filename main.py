@@ -14,6 +14,11 @@ def format_currency(value):
     formatted = "{:,.0f}".format(whole_part).replace(",", ".")
     return f"€{formatted}"
 
+def format_number(value):
+    """Format number with thousand separators using dots, without currency symbol"""
+    whole_part = int(value)
+    return "{:,.0f}".format(whole_part).replace(",", ".")
+
 def render_bank_values():
     st.header("Bank Values")
 
@@ -108,14 +113,12 @@ def main():
                             min_value=0.0,
                             value=current_value,
                             step=1000000.0,
-                            format="%.0f",
+                            format=",d",  # Use thousands format
                             key=f"value_{creditor}_{selected_bank}",
                             label_visibility="collapsed"
                         )
                         # Update the state with the new value
                         st.session_state.current_bank_data[selected_bank][creditor] = new_value
-                        # Display the formatted value
-                        st.markdown(f"<p style='margin-top: -15px; font-size: 14px;'>{format_currency(new_value)}</p>", unsafe_allow_html=True)
 
                     with col3:
                         is_exempt = st.checkbox(
