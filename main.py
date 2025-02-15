@@ -8,8 +8,11 @@ from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 
 def format_currency(value):
-    """Format number as currency with thousand separators"""
-    return f"€{value:,.2f}"
+    """Format number with thousand separators using dots"""
+    whole_part = int(value)
+    # Format with dots as thousand separators
+    formatted = "{:,.0f}".format(whole_part).replace(",", ".")
+    return f"€{formatted}"
 
 def render_bank_values():
     st.header("Bank Values")
@@ -104,9 +107,10 @@ def main():
                             value=float(st.session_state.current_bank_data[selected_bank][creditor]),
                             key=f"value_{creditor}_{selected_bank}",
                             step=1000000.0,
-                            format="%.2f",
+                            format="%d",  # Use integer format
                             label_visibility="collapsed"
                         )
+                        st.write(format_currency(value))  # Display formatted value below input
                         st.session_state.current_bank_data[selected_bank][creditor] = value
 
                     with col3:
