@@ -8,22 +8,11 @@ from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 
 def format_currency(value):
-    """Format number with thousand separators using dots and currency symbol"""
+    """Format number with thousand separators using dots"""
     whole_part = int(value)
+    # Format with dots as thousand separators
     formatted = "{:,.0f}".format(whole_part).replace(",", ".")
     return f"€{formatted}"
-
-def format_number(value):
-    """Format number with thousand separators using dots, without currency symbol"""
-    whole_part = int(value)
-    return "{:,.0f}".format(whole_part).replace(",", ".")
-
-def parse_formatted_number(formatted_str):
-    """Convert formatted number string back to float"""
-    try:
-        return float(formatted_str.replace(".", ""))
-    except (ValueError, AttributeError):
-        return 0.0
 
 def render_bank_values():
     st.header("Bank Values")
@@ -35,7 +24,7 @@ def render_bank_values():
         row["Bank"] = bank_name
         for k, v in bank_data.items():
             if k != "total_assets":
-                row[k] = v  # Keep as numeric value
+                row[k] = v
         data.append(row)
 
     df = pd.DataFrame(data)
@@ -56,7 +45,8 @@ def main():
 
     # Initialize session states
     if 'creditor_order' not in st.session_state:
-        st.session_state.creditor_order = list(DEFAULT_CREDITORS.keys())
+        # Exclude Asset Absorption from sortable creditors
+        st.session_state.creditor_order = [c for c in DEFAULT_CREDITORS.keys() if c != "Asset Absorption"]
     if 'current_bank_data' not in st.session_state:
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
     if 'exempt_creditors' not in st.session_state:
@@ -68,14 +58,25 @@ def main():
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
     with tab1:
+        # Sidebar for controls
         with st.sidebar:
             st.header("Configuration")
 
             # Bank selection
-            selected_bank = st.selectbox(
-                "Select Bank",
+            selected_banks = st.multiselect(
+                "Select Banks to Compare",
                 options=list(st.session_state.current_bank_data.keys()),
+                default=[list(st.session_state.current_bank_data.keys())[0]],
                 key="bank_selector"
+            )
+
+            # Loss percentage input
+            loss_percentage = st.slider(
+                "Loss Percentage of Total Assets",
+                min_value=0.0,
+                max_value=100.0,
+                value=10.0,
+                step=1.0
             )
 
             # Creditor hierarchy management
@@ -90,57 +91,44 @@ def main():
                 st.rerun()
 
             # Display creditor values and exempt checkboxes
-            if selected_bank:
+            if len(selected_banks) > 0:
+                selected_bank = selected_banks[0]
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    col1, col2 = st.columns([2, 3])
+                    col1, col2, col3 = st.columns([2, 2, 1])
 
                     with col1:
                         st.write(creditor)
 
                     with col2:
-                        current_value = float(st.session_state.current_bank_data[selected_bank][creditor])
-
-                        # Number input with dots format and spinners
-                        new_value = st.number_input(
+                        value = st.number_input(
                             "Value (EUR)",
-                            min_value=0.0,
-                            value=current_value,
-                            step=1000000.0,
-                            format="%.0f",
+                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
                             key=f"value_{creditor}_{selected_bank}",
+                            step=1000000.0,
+                            format="%f",  # Use float format
                             label_visibility="collapsed"
                         )
+                        st.write(format_currency(value))  # Display formatted value below input
+                        st.session_state.current_bank_data[selected_bank][creditor] = value
 
-                        # Update the displayed value with proper formatting
-                        st.markdown(f"<p style='font-size: 1rem; margin-top: -1rem;'>{format_number(new_value)}</p>", unsafe_allow_html=True)
-
-                        # Update state if value changed
-                        if new_value != current_value:
-                            st.session_state.current_bank_data[selected_bank][creditor] = new_value
-                            st.rerun()
-
-                    # Checkbox for exempt status
-                    is_exempt = st.checkbox(
-                        "Exempt",
-                        value=creditor in st.session_state.exempt_creditors,
-                        key=f"exempt_{creditor}"
-                    )
-                    if is_exempt and creditor not in st.session_state.exempt_creditors:
-                        st.session_state.exempt_creditors.add(creditor)
-                    elif not is_exempt and creditor in st.session_state.exempt_creditors:
-                        st.session_state.exempt_creditors.remove(creditor)
-
-                    # Add horizontal line after each creditor
-                    st.markdown("---")
+                    with col3:
+                        is_exempt = st.checkbox(
+                            "Exempt",
+                            value=creditor in st.session_state.exempt_creditors,
+                            key=f"exempt_{creditor}"
+                        )
+                        if is_exempt and creditor not in st.session_state.exempt_creditors:
+                            st.session_state.exempt_creditors.add(creditor)
+                        elif not is_exempt and creditor in st.session_state.exempt_creditors:
+                            st.session_state.exempt_creditors.remove(creditor)
 
         # Main content area for Loss Distribution
-        if not selected_bank:
+        if not selected_banks:
             st.warning("Please select at least one bank to display.")
         else:
             # Calculate loss distribution for each selected bank
-            selected_banks = [selected_bank] #Using selected bank from selectbox
             for bank in selected_banks:
                 st.subheader(f"{bank} Loss Distribution")
 
@@ -149,11 +137,11 @@ def main():
 
                 with col1:
                     total_assets = st.session_state.current_bank_data[bank]["total_assets"]
-                    total_loss = calculate_total_loss_with_absorption(total_assets, 10.0) #Using default value for loss percentage
+                    total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
 
                     # Create figure with two subplots side by side
                     fig = make_subplots(
-                        rows=1, cols=2,
+                        rows=1, cols=2, 
                         subplot_titles=("Assets", "Liabilities"),
                         column_widths=[0.4, 0.6],
                         horizontal_spacing=0.1
@@ -224,7 +212,7 @@ def main():
                         height=600,
                         showlegend=True,
                         barmode='stack',
-                        title=f"Loss Distribution Analysis (10% Loss)", #Using default value
+                        title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
                         legend_title="Components",
                     )
 
