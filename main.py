@@ -152,10 +152,6 @@ def main():
                     total_assets = st.session_state.current_bank_data[bank]["total_assets"]
                     total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
 
-                    # Calculate maximum value for y-axis scale
-                    max_value = max(total_assets, total_loss)
-                    y_max = ((int(max_value / 1000000) + 100) // 100) * 100 * 1000000  # Round up to nearest 100M
-
                     # Create figure with two subplots side by side
                     fig = make_subplots(
                         rows=1, cols=2, 
@@ -174,7 +170,7 @@ def main():
                     fig.add_trace(
                         go.Bar(
                             name="Remaining Assets",
-                            x=[""],
+                            x=[""],  # Removed x-axis label
                             y=[remaining_asset_value],
                             marker_color="#2ecc71",
                             text=format_currency(remaining_asset_value),
@@ -187,7 +183,7 @@ def main():
                         fig.add_trace(
                             go.Bar(
                                 name="8% Loss Absorption",
-                                x=[""],
+                                x=[""],  # Removed x-axis label
                                 y=[loss_absorbed],
                                 marker_color="#e74c3c",
                                 text=format_currency(loss_absorbed),
@@ -215,7 +211,7 @@ def main():
                             fig.add_trace(
                                 go.Bar(
                                     name=creditor,
-                                    x=[""],
+                                    x=[""],  # Removed x-axis label
                                     y=[loss_amount],
                                     marker_color=DEFAULT_CREDITORS[creditor]['color'],
                                     text=format_currency(loss_amount),
@@ -235,20 +231,27 @@ def main():
 
                     # Update axes to show values in millions
                     fig.update_xaxes(showticklabels=True)
-
-                    # Update y-axes with consistent range and formatting
-                    for col in [1, 2]:
-                        fig.update_yaxes(
-                            title_text="Amount (EUR)" if col == 1 else "",
-                            showticklabels=col == 1,  # Only show labels on first column
-                            tickformat=",.0f",
-                            tickprefix="",
-                            ticksuffix="M",
-                            range=[0, y_max],  # Set same range for both columns
-                            tickvals=[i * 1000000 for i in range(0, int(y_max/1000000) + 1, 100)],
-                            ticktext=[f"{i}M" for i in range(0, int(y_max/1000000) + 1, 100)],
-                            col=col
-                        )
+                    fig.update_yaxes(
+                        title_text="Amount (EUR)",
+                        tickformat=",.0f",  # Changed to show whole numbers
+                        tickprefix="",
+                        ticksuffix="M",
+                        # Convert the tick values to millions by dividing by 1M
+                        tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        col=1  # Only show title on the first column
+                    )
+                    # Remove title and ticks from second y-axis
+                    fig.update_yaxes(
+                        title_text="",
+                        showticklabels=False,  # Hide tick labels on right side
+                        tickformat=",.0f",
+                        tickprefix="",
+                        ticksuffix="M",
+                        tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        col=2
+                    )
 
                     st.plotly_chart(fig, use_container_width=True)
 
