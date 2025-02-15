@@ -103,9 +103,9 @@ def main():
                 for creditor in st.session_state.creditor_order:
                     st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
 
-                    col1, col2 = st.columns([3, 1])
+                    cols = st.columns([4, 1])
 
-                    with col1:
+                    with cols[0]:
                         value = st.number_input(
                             "Value (EUR)",
                             value=float(st.session_state.current_bank_data[selected_bank][creditor]),
@@ -114,10 +114,10 @@ def main():
                             format="%f",
                             label_visibility="collapsed"
                         )
-                        st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="formatted-value">{format_currency(value)}</div>', unsafe_allow_html=True)
                         st.session_state.current_bank_data[selected_bank][creditor] = value
 
-                    with col2:
+                    with cols[1]:
                         is_exempt = st.checkbox(
                             "Exempt",
                             value=creditor in st.session_state.exempt_creditors,

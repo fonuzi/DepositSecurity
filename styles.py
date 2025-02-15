@@ -72,17 +72,17 @@ def apply_styles():
         .creditor-name {
             font-size: 16px;
             font-weight: 500;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
             color: #1f2937;
         }
         .formatted-value {
             font-size: 14px;
             color: #4b5563;
-            margin-bottom: 0.5rem;
+            margin: 0.5rem 0;
         }
         /* Checkbox styling */
         .stCheckbox {
-            margin-top: 0.5rem;
+            margin-top: 0.25rem;
         }
         .stCheckbox label {
             font-size: 14px;
@@ -92,6 +92,28 @@ def apply_styles():
         .stCheckbox > div[data-testid="stMarkdownContainer"] {
             display: inline-block;
             margin-left: 0.5rem;
+        }
+        /* Number input styling */
+        div[data-testid="stNumberInput"] {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        div[data-testid="stNumberInput"] input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+        }
+        div[data-testid="stNumberInput"] button {
+            padding: 0.5rem;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+        }
+        /* Value container spacing */
+        .value-container {
+            margin-bottom: 1.5rem;
         }
         </style>
     """, unsafe_allow_html=True)
