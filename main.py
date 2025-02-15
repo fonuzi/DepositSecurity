@@ -18,8 +18,6 @@ def format_currency(value):
 
 def render_bank_values():
     st.header("Bank Values")
-
-    # Create DataFrame for bank values display
     data = []
     for bank_name, bank_data in st.session_state.current_bank_data.items():
         row = {}
@@ -31,8 +29,6 @@ def render_bank_values():
 
     df = pd.DataFrame(data)
     display_df = df.copy()
-
-    # Format all numeric columns
     numeric_cols = [col for col in df.columns if col != "Bank"]
     for col in numeric_cols:
         display_df[col] = df[col].apply(lambda x: format_currency(float(x)))
@@ -40,9 +36,7 @@ def render_bank_values():
     st.dataframe(display_df, use_container_width=True)
 
 def main():
-    # Apply custom styles
     apply_styles()
-
     st.title("Banking Sector Loss Distribution Model")
 
     # Initialize session states
@@ -55,17 +49,14 @@ def main():
     if 'graph_explanations' not in st.session_state:
         st.session_state.graph_explanations = {}
     if 'creditor_names' not in st.session_state:
-        # Initialize with default names
         st.session_state.creditor_names = {c: c for c in DEFAULT_CREDITORS.keys()}
 
-    # Create tabs
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
     with tab1:
         with st.sidebar:
             st.header("Configuration")
 
-            # Bank selection
             selected_banks = st.multiselect(
                 "Select Banks to Compare",
                 options=list(st.session_state.current_bank_data.keys()),
@@ -73,7 +64,6 @@ def main():
                 key="bank_selector"
             )
 
-            # Loss percentage input
             loss_percentage = st.slider(
                 "Loss Percentage of Total Assets",
                 min_value=0.0,
@@ -82,34 +72,24 @@ def main():
                 step=1.0
             )
 
-            # Creditor name editing and hierarchy management
-            st.subheader("Creditor Names and Hierarchy")
+            # Creditor hierarchy section
+            st.subheader("Creditor Hierarchy")
             with st.container():
                 st.markdown("""
                     <div style='background-color: #f5f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-                        Edit names and drag to reorder
+                        Drag and drop creditors to reorder
                     </div>
                 """, unsafe_allow_html=True)
 
-                # Edit creditor names
-                edited_names = {}
-                for creditor in st.session_state.creditor_order:
-                    current_name = st.session_state.creditor_names[creditor]
-                    new_name = st.text_input(
-                        f"Name for {creditor}",
-                        value=current_name,
-                        key=f"name_{creditor}"
-                    )
-                    edited_names[creditor] = new_name
+                sorted_creditors = sort_items(
+                    [st.session_state.creditor_names[c] for c in st.session_state.creditor_order]
+                )
 
-                # Update session state with new names
-                st.session_state.creditor_names.update(edited_names)
-
-                # Create sortable list with custom names
-                sorted_creditors = sort_items(st.session_state.creditor_order)
-
-                if sorted_creditors != st.session_state.creditor_order:
-                    st.session_state.creditor_order = sorted_creditors
+                # Update order if changed
+                if sorted_creditors != [st.session_state.creditor_names[c] for c in st.session_state.creditor_order]:
+                    # Map display names back to original keys
+                    name_to_key = {v: k for k, v in st.session_state.creditor_names.items()}
+                    st.session_state.creditor_order = [name_to_key[name] for name in sorted_creditors]
                     st.rerun()
 
             # Display creditor values and exempt checkboxes
@@ -118,10 +98,16 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    display_name = st.session_state.creditor_names[creditor]
-                    st.markdown(f'<div class="creditor-name">{display_name}</div>', unsafe_allow_html=True)
+                    # Editable creditor name
+                    new_name = st.text_input(
+                        "Name",
+                        value=st.session_state.creditor_names[creditor],
+                        key=f"name_{creditor}",
+                        label_visibility="collapsed"
+                    )
+                    st.session_state.creditor_names[creditor] = new_name
 
-                    # Input field
+                    # Value input
                     value = st.number_input(
                         "Value (EUR)",
                         value=float(st.session_state.current_bank_data[selected_bank][creditor]),
@@ -130,8 +116,6 @@ def main():
                         format="%f",
                         label_visibility="collapsed"
                     )
-
-                    # Display formatted value
                     st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
                     st.session_state.current_bank_data[selected_bank][creditor] = value
 
@@ -216,7 +200,7 @@ def main():
                         if loss_amount > 0:
                             fig.add_trace(
                                 go.Bar(
-                                    name=st.session_state.creditor_names[creditor],  # Use custom name
+                                    name=st.session_state.creditor_names[creditor],
                                     x=[""],
                                     y=[loss_amount],
                                     marker_color=DEFAULT_CREDITORS[creditor]['color'],
