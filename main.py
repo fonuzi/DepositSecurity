@@ -41,6 +41,8 @@ def calculate_scenario_values(total_assets, scenario):
         asset_ratio = 0.80
     elif scenario == "Resolution Valuation":
         asset_ratio = 0.70
+    elif scenario == "Liquidation Valuation":
+        asset_ratio = 0.60
     else:
         asset_ratio = 1.0  # Default case
 
@@ -73,10 +75,11 @@ def main():
             # Scenario selection
             scenario = st.radio(
                 "Select Scenario",
-                options=["Default", "FOLTF", "Resolution Valuation"],
+                options=["Default", "FOLTF", "Resolution Valuation", "Liquidation Valuation"],
                 help="""
                 FOLTF: 80% Assets to 20% Liabilities
                 Resolution Valuation: 70% Assets to 30% Liabilities
+                Liquidation Valuation: 60% Assets to 40% Liabilities
                 Default: No split applied
                 """
             )
