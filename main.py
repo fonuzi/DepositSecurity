@@ -82,7 +82,11 @@ def main():
             # Creditor hierarchy management
             st.subheader("Creditor Hierarchy")
             with st.container():
-                st.info("Drag and drop creditors to reorder")
+                st.markdown("""
+                    <div style='background-color: #f5f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
+                        Drag and drop creditors to reorder
+                    </div>
+                """, unsafe_allow_html=True)
 
                 # Create sortable list for creditors
                 sorted_creditors = sort_items(st.session_state.creditor_order)

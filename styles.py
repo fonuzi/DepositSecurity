@@ -22,30 +22,56 @@ def apply_styles():
             font-size: 14px;
             margin-bottom: 0.5rem;
         }
-        /* Creditor hierarchy styling */
+        /* Creditor hierarchy container */
         [data-testid="stSidebar"] .element-container:has(.streamlit-sortables) {
             background-color: #f5f3ff;
             padding: 1rem;
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin: 1rem 0;
+            width: 100%;
+            box-sizing: border-box;
         }
+        /* Fixed-width container for sortable items */
+        .streamlit-sortables {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        /* Individual sortable items */
         .streamlit-sortables > div {
             background-color: #4338ca !important;
             color: white !important;
-            padding: 0.75rem !important;
+            padding: 0.75rem 1rem !important;
             margin: 0.5rem 0 !important;
             border-radius: 6px !important;
             cursor: move !important;
             font-size: 14px !important;
+            font-weight: 500 !important;
             border: none !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: block !important;
+            text-align: left !important;
+            transition: none !important;
         }
-        /* Info message style */
+        /* Info message above sortable items */
         [data-testid="stSidebar"] .stAlert {
             background-color: #f5f3ff;
             color: #4338ca;
             border: none;
             padding: 1rem;
             margin-bottom: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        /* Ensure sidebar maintains width */
+        [data-testid="stSidebar"] {
+            min-width: 320px;
+            max-width: 320px;
+        }
+        /* Container for creditor values */
+        .creditor-values-container {
+            margin-top: 2rem;
+            width: 100%;
         }
         </style>
     """, unsafe_allow_html=True)
