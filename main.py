@@ -229,9 +229,13 @@ def main():
                         legend_title="Components",
                     )
 
-                    # Update axes
+                    # Update axes to show values in millions
                     fig.update_xaxes(showticklabels=True)
-                    fig.update_yaxes(title_text="Amount (EUR)")
+                    fig.update_yaxes(
+                        title_text="Amount (EUR)",
+                        tickformat=".1fM",
+                        ticksuffix="M"
+                    )
 
                     st.plotly_chart(fig, use_container_width=True)
 
