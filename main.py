@@ -48,6 +48,8 @@ def main():
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
     if 'exempt_creditors' not in st.session_state:
         st.session_state.exempt_creditors = set()
+    if 'graph_explanations' not in st.session_state:
+        st.session_state.graph_explanations = {}
 
     # Create tabs
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
@@ -126,93 +128,112 @@ def main():
             for bank in selected_banks:
                 st.subheader(f"{bank} Loss Distribution")
 
-                total_assets = st.session_state.current_bank_data[bank]["total_assets"]
-                total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
+                # Create columns for graph and explanation
+                col1, col2 = st.columns([2, 1])
 
-                # Create figure with two subplots side by side
-                fig = make_subplots(
-                    rows=1, cols=2, 
-                    subplot_titles=("Assets", "Liabilities"),
-                    column_widths=[0.4, 0.6],
-                    horizontal_spacing=0.1
-                )
+                with col1:
+                    total_assets = st.session_state.current_bank_data[bank]["total_assets"]
+                    total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
 
-                # Asset bar
-                threshold_8_percent = total_assets * 0.08
-                remaining_asset_value = max(0, total_assets - total_loss)
-                loss_absorbed = min(total_loss, threshold_8_percent)
-                remaining_loss = max(0, total_loss - loss_absorbed)
+                    # Create figure with two subplots side by side
+                    fig = make_subplots(
+                        rows=1, cols=2, 
+                        subplot_titles=("Assets", "Liabilities"),
+                        column_widths=[0.4, 0.6],
+                        horizontal_spacing=0.1
+                    )
 
-                # Add asset bar components
-                fig.add_trace(
-                    go.Bar(
-                        name="Remaining Assets",
-                        x=["Total Assets"],
-                        y=[remaining_asset_value],
-                        marker_color="#2ecc71",
-                        text=format_currency(remaining_asset_value),
-                        textposition='inside',
-                    ),
-                    row=1, col=1
-                )
+                    # Asset bar
+                    threshold_8_percent = total_assets * 0.08
+                    remaining_asset_value = max(0, total_assets - total_loss)
+                    loss_absorbed = min(total_loss, threshold_8_percent)
+                    remaining_loss = max(0, total_loss - loss_absorbed)
 
-                if loss_absorbed > 0:
+                    # Add asset bar components
                     fig.add_trace(
                         go.Bar(
-                            name="8% Loss Absorption",
+                            name="Remaining Assets",
                             x=["Total Assets"],
-                            y=[loss_absorbed],
-                            marker_color="#e74c3c",
-                            text=format_currency(loss_absorbed),
+                            y=[remaining_asset_value],
+                            marker_color="#2ecc71",
+                            text=format_currency(remaining_asset_value),
                             textposition='inside',
                         ),
                         row=1, col=1
                     )
 
-                # Calculate creditor distribution
-                creditor_distribution = calculate_loss_distribution(
-                    remaining_loss,
-                    st.session_state.current_bank_data[bank],
-                    DEFAULT_CREDITORS,
-                    st.session_state.creditor_order,
-                    st.session_state.exempt_creditors
-                )
-
-                # Add creditor bars
-                for creditor in st.session_state.creditor_order:
-                    if creditor in st.session_state.exempt_creditors:
-                        continue
-
-                    loss_amount = creditor_distribution[creditor]
-                    if loss_amount > 0:
+                    if loss_absorbed > 0:
                         fig.add_trace(
                             go.Bar(
-                                name=creditor,
-                                x=["Loss Distribution"],
-                                y=[loss_amount],
-                                marker_color=DEFAULT_CREDITORS[creditor]['color'],
-                                text=format_currency(loss_amount),
+                                name="8% Loss Absorption",
+                                x=["Total Assets"],
+                                y=[loss_absorbed],
+                                marker_color="#e74c3c",
+                                text=format_currency(loss_absorbed),
                                 textposition='inside',
                             ),
-                            row=1, col=2
+                            row=1, col=1
                         )
 
-                # Update layout
-                fig.update_layout(
-                    height=600,
-                    showlegend=True,
-                    barmode='stack',
-                    title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
-                    legend_title="Components",
-                )
+                    # Calculate creditor distribution
+                    creditor_distribution = calculate_loss_distribution(
+                        remaining_loss,
+                        st.session_state.current_bank_data[bank],
+                        DEFAULT_CREDITORS,
+                        st.session_state.creditor_order,
+                        st.session_state.exempt_creditors
+                    )
 
-                # Update axes
-                fig.update_xaxes(showticklabels=True)
-                fig.update_yaxes(title_text="Amount (EUR)")
+                    # Add creditor bars
+                    for creditor in st.session_state.creditor_order:
+                        if creditor in st.session_state.exempt_creditors:
+                            continue
 
-                st.plotly_chart(fig, use_container_width=True)
+                        loss_amount = creditor_distribution[creditor]
+                        if loss_amount > 0:
+                            fig.add_trace(
+                                go.Bar(
+                                    name=creditor,
+                                    x=["Loss Distribution"],
+                                    y=[loss_amount],
+                                    marker_color=DEFAULT_CREDITORS[creditor]['color'],
+                                    text=format_currency(loss_amount),
+                                    textposition='inside',
+                                ),
+                                row=1, col=2
+                            )
 
-                # Summary statistics
+                    # Update layout
+                    fig.update_layout(
+                        height=600,
+                        showlegend=True,
+                        barmode='stack',
+                        title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
+                        legend_title="Components",
+                    )
+
+                    # Update axes
+                    fig.update_xaxes(showticklabels=True)
+                    fig.update_yaxes(title_text="Amount (EUR)")
+
+                    st.plotly_chart(fig, use_container_width=True)
+
+                with col2:
+                    st.markdown("### Graph Explanation")
+                    # Add text area for explanation
+                    if bank not in st.session_state.graph_explanations:
+                        st.session_state.graph_explanations[bank] = ""
+
+                    explanation = st.text_area(
+                        "Add your explanation here",
+                        value=st.session_state.graph_explanations[bank],
+                        height=300,
+                        key=f"explanation_{bank}",
+                        label_visibility="collapsed"
+                    )
+                    st.session_state.graph_explanations[bank] = explanation
+
+                # Summary statistics below the graph and explanation
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
