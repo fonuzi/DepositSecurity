@@ -113,7 +113,7 @@ def main():
                             min_value=0.0,
                             value=current_value,
                             step=1000000.0,
-                            format=",d",  # Use thousands format
+                            format="%.0f",  # Use simple integer format
                             key=f"value_{creditor}_{selected_bank}",
                             label_visibility="collapsed"
                         )
