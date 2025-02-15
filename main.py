@@ -166,7 +166,7 @@ def main():
                     loss_absorbed = min(total_loss, threshold_8_percent)
                     remaining_loss = max(0, total_loss - loss_absorbed)
 
-                    # Add asset bar components with consistent width
+                    # Add asset bar components
                     fig.add_trace(
                         go.Bar(
                             name="Remaining Assets",
@@ -175,7 +175,6 @@ def main():
                             marker_color="#2ecc71",
                             text=format_currency(remaining_asset_value),
                             textposition='inside',
-                            width=0.5,  # Set consistent bar width
                         ),
                         row=1, col=1
                     )
@@ -189,7 +188,6 @@ def main():
                                 marker_color="#e74c3c",
                                 text=format_currency(loss_absorbed),
                                 textposition='inside',
-                                width=0.5,  # Set consistent bar width
                             ),
                             row=1, col=1
                         )
@@ -203,7 +201,7 @@ def main():
                         st.session_state.exempt_creditors
                     )
 
-                    # Add creditor bars with consistent width
+                    # Add creditor bars
                     for creditor in st.session_state.creditor_order:
                         if creditor in st.session_state.exempt_creditors:
                             continue
@@ -218,7 +216,6 @@ def main():
                                     marker_color=DEFAULT_CREDITORS[creditor]['color'],
                                     text=format_currency(loss_amount),
                                     textposition='inside',
-                                    width=0.5,  # Set consistent bar width
                                 ),
                                 row=1, col=2
                             )
@@ -230,8 +227,6 @@ def main():
                         barmode='stack',
                         title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
                         legend_title="Components",
-                        bargap=0.15,  # Adjust gap between bars
-                        bargroupgap=0.1,  # Adjust gap between bar groups
                     )
 
                     # Update axes to show values in millions
