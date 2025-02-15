@@ -69,32 +69,29 @@ def apply_styles():
             max-width: 320px;
         }
         /* Creditor values styling */
-        .creditor-value-container {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .creditor-value-container h3 {
+        .creditor-name {
             font-size: 16px;
             font-weight: 500;
             margin-bottom: 0.5rem;
             color: #1f2937;
         }
-        .creditor-value-container .number-input {
-            width: 100%;
-            margin-bottom: 0.25rem;
-        }
-        .creditor-value-container .formatted-value {
+        .formatted-value {
             font-size: 14px;
             color: #4b5563;
             margin-bottom: 0.5rem;
         }
-        .creditor-value-container .exempt-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        /* Checkbox styling */
+        .stCheckbox {
+            margin-top: 0.5rem;
+        }
+        .stCheckbox label {
+            font-size: 14px;
+            color: #4b5563;
+        }
+        /* Fix checkbox alignment */
+        .stCheckbox > div[data-testid="stMarkdownContainer"] {
+            display: inline-block;
+            margin-left: 0.5rem;
         }
         </style>
     """, unsafe_allow_html=True)

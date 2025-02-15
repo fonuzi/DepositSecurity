@@ -101,11 +101,7 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    st.markdown(f"""
-                        <div class="creditor-value-container">
-                            <h3>{creditor}</h3>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
 
                     col1, col2 = st.columns([3, 1])
 
@@ -126,7 +122,8 @@ def main():
                             "Exempt",
                             value=creditor in st.session_state.exempt_creditors,
                             key=f"exempt_{creditor}",
-                            help="Exclude this creditor from loss absorption"
+                            help="Exclude this creditor from loss absorption",
+                            label_visibility="visible"
                         )
                         if is_exempt and creditor not in st.session_state.exempt_creditors:
                             st.session_state.exempt_creditors.add(creditor)
