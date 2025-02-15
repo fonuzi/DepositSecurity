@@ -155,7 +155,7 @@ def main():
                     # Create figure with two subplots side by side
                     fig = make_subplots(
                         rows=1, cols=2, 
-                        subplot_titles=("Assets", "Liabilities"),
+                        subplot_titles=("", ""),  # Removed subplot titles
                         column_widths=[0.4, 0.6],
                         horizontal_spacing=0.1
                     )
@@ -170,7 +170,7 @@ def main():
                     fig.add_trace(
                         go.Bar(
                             name="Remaining Assets",
-                            x=["Total Assets"],
+                            x=[""],  # Removed x-axis label
                             y=[remaining_asset_value],
                             marker_color="#2ecc71",
                             text=format_currency(remaining_asset_value),
@@ -183,7 +183,7 @@ def main():
                         fig.add_trace(
                             go.Bar(
                                 name="8% Loss Absorption",
-                                x=["Total Assets"],
+                                x=[""],  # Removed x-axis label
                                 y=[loss_absorbed],
                                 marker_color="#e74c3c",
                                 text=format_currency(loss_absorbed),
@@ -211,7 +211,7 @@ def main():
                             fig.add_trace(
                                 go.Bar(
                                     name=creditor,
-                                    x=["Loss Distribution"],
+                                    x=[""],  # Removed x-axis label
                                     y=[loss_amount],
                                     marker_color=DEFAULT_CREDITORS[creditor]['color'],
                                     text=format_currency(loss_amount),
