@@ -27,7 +27,7 @@ def apply_styles():
             background-color: #f5f3ff;
             padding: 1rem;
             border-radius: 8px;
-            margin: 1rem 0;
+            margin: 0.5rem 0; /* Changed from 1rem */
             width: 100%;
             box-sizing: border-box;
         }
@@ -68,13 +68,13 @@ def apply_styles():
         .formatted-value {
             font-size: 14px;
             color: #4b5563;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem; /* Changed from 0.5rem */
             display: block;
         }
         /* Checkbox styling */
         .stCheckbox {
             margin-top: 0;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
         /* Fix checkbox alignment */
         .stCheckbox > div[data-testid="stMarkdownContainer"] {
@@ -97,7 +97,7 @@ def apply_styles():
             border: 0;
             height: 1px;
             background-color: #e5e7eb;
-            margin: 1rem 0;
+            margin: 0.5rem 0; /* Changed from 1rem */
         }
         </style>
     """, unsafe_allow_html=True)
