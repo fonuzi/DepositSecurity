@@ -27,6 +27,23 @@ font = "sans serif"
 streamlit run main.py
 ```
 
+## Sharing Options
+
+### 1. Streamlit Cloud (Recommended)
+Deploy the app to Streamlit Cloud for 24/7 access:
+1. Follow the GitHub deployment instructions below
+2. Access your app at `https://share.streamlit.io/your-username/your-repo-name`
+3. Share the URL with anyone who needs access
+
+### 2. Local Network Sharing
+To share the app on your local network:
+1. Run the app using the instructions above
+2. Find your computer's local IP address:
+   - On Windows: Open CMD and type `ipconfig`
+   - On Mac/Linux: Open Terminal and type `ifconfig` or `ip addr`
+3. Share the URL: `http://your-local-ip:5000`
+   Note: The recipient must be on the same network
+
 ## GitHub Deployment Instructions
 
 1. Create a new repository on GitHub
