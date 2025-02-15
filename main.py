@@ -1,6 +1,8 @@
 import streamlit as st
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
+from streamlit_sortables import sort_items
 from utils import calculate_loss_distribution, reorder_creditors, calculate_total_loss_with_absorption
 from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
@@ -40,6 +42,7 @@ def main():
 
     # Initialize session states
     if 'creditor_order' not in st.session_state:
+        # Exclude Asset Absorption from sortable creditors
         st.session_state.creditor_order = [c for c in DEFAULT_CREDITORS.keys() if c != "Asset Absorption"]
     if 'current_bank_data' not in st.session_state:
         st.session_state.current_bank_data = DEFAULT_BANKS.copy()
@@ -62,7 +65,7 @@ def main():
                 key="bank_selector"
             )
 
-            # Total loss input (percentage of total assets)
+            # Loss percentage input
             loss_percentage = st.slider(
                 "Loss Percentage of Total Assets",
                 min_value=0.0,
@@ -73,74 +76,100 @@ def main():
 
             # Creditor hierarchy management
             st.subheader("Creditor Hierarchy")
-            st.info("Click and select creditors to reorder")
+            st.info("Drag and drop creditors to reorder")
 
-            # Create a reorderable list using selectbox for each position
-            creditor_positions = {}
-            available_creditors = list(st.session_state.creditor_order)
+            # Create sortable list for creditors
+            sorted_creditors = sort_items(st.session_state.creditor_order)
 
-            for position in range(len(available_creditors)):
-                current_creditor = st.session_state.creditor_order[position]
-                col1, col2 = st.columns([4, 1])
+            if sorted_creditors != st.session_state.creditor_order:
+                st.session_state.creditor_order = sorted_creditors
+                st.rerun()
 
-                with col1:
-                    # Allow selection of creditor for this position
-                    selected = st.selectbox(
-                        f"Position {position + 1}",
-                        options=available_creditors,
-                        index=available_creditors.index(current_creditor),
-                        key=f"pos_{position}"
-                    )
-                    creditor_positions[position] = selected
-
-                    # Remove selected creditor from available options
-                    if selected in available_creditors:
-                        available_creditors.remove(selected)
-
-                with col2:
-                    # Exempt checkbox
-                    is_exempt = st.checkbox(
-                        "Exempt",
-                        value=current_creditor in st.session_state.exempt_creditors,
-                        key=f"exempt_{current_creditor}"
-                    )
-                    if is_exempt and current_creditor not in st.session_state.exempt_creditors:
-                        st.session_state.exempt_creditors.add(current_creditor)
-                    elif not is_exempt and current_creditor in st.session_state.exempt_creditors:
-                        st.session_state.exempt_creditors.remove(current_creditor)
-
-            # Update creditor order based on selections
-            st.session_state.creditor_order = [creditor_positions[i] for i in range(len(creditor_positions))]
-
-            # Display bank values for editing
+            # Display creditor values and exempt checkboxes
             if len(selected_banks) > 0:
                 selected_bank = selected_banks[0]
-                st.subheader("Bank Values")
+                st.subheader("Creditor Values")
+
                 for creditor in st.session_state.creditor_order:
-                    value = st.number_input(
-                        f"{creditor} Value (EUR)",
-                        value=float(st.session_state.current_bank_data[selected_bank][creditor]),
-                        key=f"value_{creditor}_{selected_bank}",
-                        step=1000000.0,
-                        format="%f"
-                    )
-                    st.session_state.current_bank_data[selected_bank][creditor] = value
+                    col1, col2, col3 = st.columns([2, 2, 1])
+
+                    with col1:
+                        st.write(creditor)
+
+                    with col2:
+                        value = st.number_input(
+                            "Value (EUR)",
+                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
+                            key=f"value_{creditor}_{selected_bank}",
+                            step=1000000.0,
+                            format="%.2f",
+                            label_visibility="collapsed"
+                        )
+                        st.session_state.current_bank_data[selected_bank][creditor] = value
+
+                    with col3:
+                        is_exempt = st.checkbox(
+                            "Exempt",
+                            value=creditor in st.session_state.exempt_creditors,
+                            key=f"exempt_{creditor}"
+                        )
+                        if is_exempt and creditor not in st.session_state.exempt_creditors:
+                            st.session_state.exempt_creditors.add(creditor)
+                        elif not is_exempt and creditor in st.session_state.exempt_creditors:
+                            st.session_state.exempt_creditors.remove(creditor)
 
         # Main content area for Loss Distribution
         if not selected_banks:
             st.warning("Please select at least one bank to display.")
         else:
             # Calculate loss distribution for each selected bank
-            loss_data = {}
             for bank in selected_banks:
+                st.subheader(f"{bank} Loss Distribution")
+
                 total_assets = st.session_state.current_bank_data[bank]["total_assets"]
                 total_loss = calculate_total_loss_with_absorption(total_assets, loss_percentage)
 
-                # Calculate asset absorption amount (8% threshold)
-                asset_absorption = min(total_loss, total_assets * 0.08)
-                remaining_loss = max(0, total_loss - asset_absorption)
+                # Create figure with two subplots side by side
+                fig = make_subplots(
+                    rows=1, cols=2, 
+                    subplot_titles=("Assets", "Liabilities"),
+                    column_widths=[0.4, 0.6],
+                    horizontal_spacing=0.1
+                )
 
-                # Calculate distribution for remaining loss
+                # Asset bar
+                threshold_8_percent = total_assets * 0.08
+                remaining_asset_value = max(0, total_assets - total_loss)
+                loss_absorbed = min(total_loss, threshold_8_percent)
+                remaining_loss = max(0, total_loss - loss_absorbed)
+
+                # Add asset bar components
+                fig.add_trace(
+                    go.Bar(
+                        name="Remaining Assets",
+                        x=["Total Assets"],
+                        y=[remaining_asset_value],
+                        marker_color="#2ecc71",
+                        text=format_currency(remaining_asset_value),
+                        textposition='inside',
+                    ),
+                    row=1, col=1
+                )
+
+                if loss_absorbed > 0:
+                    fig.add_trace(
+                        go.Bar(
+                            name="8% Loss Absorption",
+                            x=["Total Assets"],
+                            y=[loss_absorbed],
+                            marker_color="#e74c3c",
+                            text=format_currency(loss_absorbed),
+                            textposition='inside',
+                        ),
+                        row=1, col=1
+                    )
+
+                # Calculate creditor distribution
                 creditor_distribution = calculate_loss_distribution(
                     remaining_loss,
                     st.session_state.current_bank_data[bank],
@@ -149,126 +178,71 @@ def main():
                     st.session_state.exempt_creditors
                 )
 
-                loss_data[bank] = {
-                    "asset_absorption": asset_absorption,
-                    "creditor_distribution": creditor_distribution
-                }
-
-            # Create visualization
-            fig = go.Figure()
-
-            # Add combined bars for each bank
-            for bank in selected_banks:
-                bank_data = loss_data[bank]
-
-                # Add asset absorption bar
-                fig.add_trace(go.Bar(
-                    name="Asset Absorption",
-                    x=[bank],
-                    y=[bank_data["asset_absorption"]],
-                    marker_color=DEFAULT_CREDITORS["Asset Absorption"]["color"],
-                    text=format_currency(bank_data["asset_absorption"]),
-                    textposition='inside',
-                ))
-
                 # Add creditor bars
-                y_position = bank_data["asset_absorption"]
                 for creditor in st.session_state.creditor_order:
                     if creditor in st.session_state.exempt_creditors:
                         continue
 
-                    loss_amount = bank_data["creditor_distribution"][creditor]
+                    loss_amount = creditor_distribution[creditor]
                     if loss_amount > 0:
-                        fig.add_trace(go.Bar(
-                            name=creditor,
-                            x=[bank],
-                            y=[loss_amount],
-                            marker_color=DEFAULT_CREDITORS[creditor]['color'],
-                            text=format_currency(loss_amount),
-                            textposition='inside',
-                        ))
-                        y_position += loss_amount
+                        fig.add_trace(
+                            go.Bar(
+                                name=creditor,
+                                x=["Loss Distribution"],
+                                y=[loss_amount],
+                                marker_color=DEFAULT_CREDITORS[creditor]['color'],
+                                text=format_currency(loss_amount),
+                                textposition='inside',
+                            ),
+                            row=1, col=2
+                        )
 
-            # Update layout
-            fig.update_layout(
-                barmode='stack',
-                height=600,
-                title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
-                yaxis_title="Amount (EUR)",
-                showlegend=True,
-                legend_title="Creditor Type",
-                font=dict(size=12),
-            )
+                # Update layout
+                fig.update_layout(
+                    height=600,
+                    showlegend=True,
+                    barmode='stack',
+                    title=f"Loss Distribution Analysis ({loss_percentage}% Loss)",
+                    legend_title="Components",
+                )
 
-            st.plotly_chart(fig, use_container_width=True)
+                # Update axes
+                fig.update_xaxes(showticklabels=True)
+                fig.update_yaxes(title_text="Amount (EUR)")
 
-            # Summary statistics
-            st.subheader("Summary Statistics")
+                st.plotly_chart(fig, use_container_width=True)
 
-            for bank in selected_banks:
-                st.write(f"### {bank}")
-                bank_data = loss_data[bank]
-                total_loss = bank_data["asset_absorption"] + sum(bank_data["creditor_distribution"].values())
+                # Summary statistics
+                col1, col2, col3 = st.columns(3)
 
-                col1, col2, col3 = st.columns([1, 1, 2])
                 with col1:
                     st.metric("Total Loss", format_currency(total_loss))
 
                 with col2:
-                    st.metric("Asset Absorption", format_currency(bank_data["asset_absorption"]))
+                    st.metric("Loss Absorbed by Assets", format_currency(loss_absorbed))
 
                 with col3:
-                    st.write("Loss Distribution (%)")
-                    # Show asset absorption percentage
-                    percentage = (bank_data["asset_absorption"] / total_loss) * 100
-                    st.progress(percentage / 100)
-                    st.write(f"Asset Absorption: {percentage:.1f}%")
+                    st.metric("Remaining Loss", format_currency(remaining_loss))
 
-                    # Show creditor percentages
+                # Detailed percentages
+                st.write("#### Distribution Percentages")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.write("Asset Absorption")
+                    asset_percentage = (loss_absorbed / total_loss) * 100 if total_loss > 0 else 0
+                    st.progress(asset_percentage / 100)
+                    st.write(f"8% Threshold: {asset_percentage:.1f}%")
+
+                with col2:
+                    st.write("Creditor Distribution")
                     for creditor in st.session_state.creditor_order:
                         if creditor in st.session_state.exempt_creditors:
                             continue
-                        loss_amount = bank_data["creditor_distribution"][creditor]
-                        percentage = (loss_amount / total_loss) * 100
+                        loss_amount = creditor_distribution[creditor]
+                        percentage = (loss_amount / total_loss) * 100 if total_loss > 0 else 0
                         st.progress(percentage / 100)
                         st.write(f"{creditor}: {percentage:.1f}%")
-
-            # Export functionality
-            if st.button("Export Data"):
-                export_data = []
-                for bank in selected_banks:
-                    bank_data = loss_data[bank]
-                    total_loss = bank_data["asset_absorption"] + sum(bank_data["creditor_distribution"].values())
-
-                    # Add asset absorption data
-                    export_data.append({
-                        'Bank': bank,
-                        'Type': 'Asset Absorption',
-                        'Amount': bank_data["asset_absorption"],
-                        'Percentage': (bank_data["asset_absorption"] / total_loss) * 100
-                    })
-
-                    # Add creditor distribution data
-                    for creditor in st.session_state.creditor_order:
-                        if creditor in st.session_state.exempt_creditors:
-                            continue
-                        loss_amount = bank_data["creditor_distribution"][creditor]
-                        export_data.append({
-                            'Bank': bank,
-                            'Type': 'Creditor',
-                            'Creditor': creditor,
-                            'Amount': loss_amount,
-                            'Percentage': (loss_amount / total_loss) * 100
-                        })
-
-                df = pd.DataFrame(export_data)
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv,
-                    file_name="loss_distribution.csv",
-                    mime="text/csv"
-                )
 
     with tab2:
         render_bank_values()

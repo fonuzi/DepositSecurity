@@ -1014,6 +1014,7 @@ dependencies = [
     { name = "pandas" },
     { name = "plotly" },
     { name = "streamlit" },
+    { name = "streamlit-sortables" },
     { name = "trafilatura" },
     { name = "twilio" },
 ]
@@ -1023,6 +1024,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "streamlit", specifier = ">=1.42.0" },
+    { name = "streamlit-sortables", specifier = ">=0.3.1" },
     { name = "trafilatura", specifier = ">=2.0.0" },
     { name = "twilio", specifier = ">=9.4.4" },
 ]
@@ -1161,6 +1163,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0e/61/a59da06a2822b265fc6230650a1ec4b9203da76ee9cf023083752debf9fa/streamlit-1.42.0.tar.gz", hash = "sha256:8c48494ccfad33e7d0bc5873151800b203cb71203bfd42bc7418940710ca4970", size = 9169261 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ad/dc/69068179e09488d0833a970d06e8bf40e35669a7bddb8a3caadc13b7dff4/streamlit-1.42.0-py2.py3-none-any.whl", hash = "sha256:edf333fd3525b7c64b19e1156b483a1a93cbdb09a3a06f26478388d68f971090", size = 9560180 },
+]
+
+[[package]]
+name = "streamlit-sortables"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "streamlit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/11/10/00c3ae0f183d41bb3608157283a2c92e4f4db87cb21a73e96b3c2c2ca58f/streamlit_sortables-0.3.1.tar.gz", hash = "sha256:9bed78f4407f2b9b1ddead8b6459d1af839aab427b7b5fe4c091e6870630acfe", size = 564139 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/b4/edbef9fa8e49f5df2745a178c44b23553d8472c22fb23f44f6949d544410/streamlit_sortables-0.3.1-py3-none-any.whl", hash = "sha256:1847b2fa2041762b6442e21224bd8c0316c5412e4eb3a38fa748cf7ced834d49", size = 570356 },
 ]
 
 [[package]]
