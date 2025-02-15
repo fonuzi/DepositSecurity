@@ -22,5 +22,30 @@ def apply_styles():
             font-size: 14px;
             margin-bottom: 0.5rem;
         }
+        /* Creditor hierarchy styling */
+        [data-testid="stSidebar"] .element-container:has(.streamlit-sortables) {
+            background-color: #f5f3ff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .streamlit-sortables > div {
+            background-color: #4338ca !important;
+            color: white !important;
+            padding: 0.75rem !important;
+            margin: 0.5rem 0 !important;
+            border-radius: 6px !important;
+            cursor: move !important;
+            font-size: 14px !important;
+            border: none !important;
+        }
+        /* Info message style */
+        [data-testid="stSidebar"] .stAlert {
+            background-color: #f5f3ff;
+            color: #4338ca;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
         </style>
     """, unsafe_allow_html=True)

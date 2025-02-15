@@ -81,14 +81,15 @@ def main():
 
             # Creditor hierarchy management
             st.subheader("Creditor Hierarchy")
-            st.info("Drag and drop creditors to reorder")
+            with st.container():
+                st.info("Drag and drop creditors to reorder")
 
-            # Create sortable list for creditors
-            sorted_creditors = sort_items(st.session_state.creditor_order)
+                # Create sortable list for creditors
+                sorted_creditors = sort_items(st.session_state.creditor_order)
 
-            if sorted_creditors != st.session_state.creditor_order:
-                st.session_state.creditor_order = sorted_creditors
-                st.rerun()
+                if sorted_creditors != st.session_state.creditor_order:
+                    st.session_state.creditor_order = sorted_creditors
+                    st.rerun()
 
             # Display creditor values and exempt checkboxes
             if len(selected_banks) > 0:
