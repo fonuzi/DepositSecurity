@@ -107,7 +107,7 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    col1, col2 = st.columns([2,3]) #Removed col3
+                    col1, col2 = st.columns([2,3]) 
 
                     with col1:
                         st.write(creditor)
@@ -116,32 +116,22 @@ def main():
                         current_value = st.session_state.current_bank_data[selected_bank][creditor]
                         formatted_value = format_number(current_value)
 
-                        new_value_str = st.text_input(
+                        # Number input with built-in spinners
+                        new_value = st.number_input(
                             "Value (EUR)",
-                            value=formatted_value,
+                            value=float(current_value),
+                            step=1000000.0,
                             key=f"value_{creditor}_{selected_bank}",
-                            label_visibility="collapsed"
+                            label_visibility="collapsed",
+                            format="%.0f"
                         )
 
-                        increment = st.button("+", key=f"plus_{creditor}")
-                        decrement = st.button("-", key=f"minus_{creditor}")
-
-                        try:
-                            new_value = parse_formatted_number(new_value_str)
-                            if increment:
-                                new_value += 1000000  # Increment by 1M
-                            elif decrement:
-                                new_value = max(0, new_value - 1000000)  # Decrement by 1M, not below 0
-
+                        # Update state if value changed
+                        if new_value != current_value:
                             st.session_state.current_bank_data[selected_bank][creditor] = new_value
+                            st.rerun()
 
-                            if new_value != parse_formatted_number(new_value_str):
-                                st.experimental_rerun()
-                        except ValueError:
-                            st.error(f"Invalid value for {creditor}")
-
-                    #Removed col3 and its content.  Checkbox moved to col2
-
+                    # Checkbox for exempt status
                     is_exempt = st.checkbox(
                         "Exempt",
                         value=creditor in st.session_state.exempt_creditors,
