@@ -102,18 +102,20 @@ def main():
                         st.write(creditor)
 
                     with col2:
-                        raw_value = st.text_input(
+                        current_value = float(st.session_state.current_bank_data[selected_bank][creditor])
+                        new_value = st.number_input(
                             "Value (EUR)",
-                            value=format_currency(st.session_state.current_bank_data[selected_bank][creditor])[1:],  # Remove € symbol
+                            min_value=0.0,
+                            value=current_value,
+                            step=1000000.0,
+                            format="%.0f",
                             key=f"value_{creditor}_{selected_bank}",
                             label_visibility="collapsed"
                         )
-                        # Convert the formatted string back to number
-                        try:
-                            numeric_value = float(raw_value.replace(".", ""))
-                            st.session_state.current_bank_data[selected_bank][creditor] = numeric_value
-                        except ValueError:
-                            st.error(f"Invalid value for {creditor}")
+                        # Update the state with the new value
+                        st.session_state.current_bank_data[selected_bank][creditor] = new_value
+                        # Display the formatted value
+                        st.markdown(f"<p style='margin-top: -15px; font-size: 14px;'>{format_currency(new_value)}</p>", unsafe_allow_html=True)
 
                     with col3:
                         is_exempt = st.checkbox(
