@@ -1,11 +1,59 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import pandas as pd
-from streamlit_sortables import sort_items
-from utils import calculate_loss_distribution, reorder_creditors, calculate_total_loss_with_absorption
-from styles import apply_styles
-from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
+
+# Handling the streamlit_sortables import with a try-except block
+try:
+    from streamlit_sortables import sort_items
+except ImportError:
+    # Fallback function if the import fails
+    def sort_items(items):
+        st.warning("streamlit_sortables not available - ordering functionality disabled")
+        return items
+
+# Mock the missing utilities if they can't be imported
+try:
+    from utils import calculate_loss_distribution, reorder_creditors, calculate_total_loss_with_absorption
+    from styles import apply_styles
+    from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
+except ImportError:
+    st.error("Required modules not found. Please ensure utils.py, styles.py, and data_models.py are present in the repository.")
+    
+    # Define minimal versions of required functions and data
+    def calculate_loss_distribution(loss, bank_data, creditors, order, exempt):
+        return {c: 0 for c in order}
+    
+    def reorder_creditors(order):
+        return order
+    
+    def calculate_total_loss_with_absorption(assets, percentage):
+        return assets * (percentage / 100)
+    
+    def apply_styles():
+        st.markdown("""
+        <style>
+        .formatted-value { font-size: 0.9rem; color: #555; margin-top: -1rem; }
+        .creditor-divider { margin: 0.5rem 0; border: 0; border-top: 1px solid #eee; }
+        </style>
+        """, unsafe_allow_html=True)
+    
+    # Define default data structures
+    DEFAULT_CREDITORS = {
+        "Senior Debt": {"color": "#3498db"},
+        "Subordinated Debt": {"color": "#9b59b6"},
+        "Equity": {"color": "#e74c3c"},
+        "Asset Absorption": {"color": "#2ecc71"}
+    }
+    
+    DEFAULT_BANKS = {
+        "Bank A": {
+            "total_assets": 1000000000,
+            "Senior Debt": 400000000,
+            "Subordinated Debt": 300000000,
+            "Equity": 300000000
+        }
+    }
 
 def format_currency(value):
     """Format number in millions with thousand separators using dots"""
@@ -52,10 +100,7 @@ def calculate_scenario_values(total_assets, scenario):
     return asset_value, liability_value
 
 def main():
-    apply_styles()
-    st.title("Banking Sector Loss Distribution Model")
-
-    # Initialize session states
+    # Initialize session state first thing
     if 'creditor_order' not in st.session_state:
         st.session_state.creditor_order = [c for c in DEFAULT_CREDITORS.keys() if c != "Asset Absorption"]
     if 'current_bank_data' not in st.session_state:
@@ -66,6 +111,9 @@ def main():
         st.session_state.graph_explanations = {}
     if 'creditor_names' not in st.session_state:
         st.session_state.creditor_names = {c: c for c in DEFAULT_CREDITORS.keys()}
+    
+    apply_styles()
+    st.title("Banking Sector Loss Distribution Model")
 
     tab1, tab2 = st.tabs(["Loss Distribution", "Bank Values"])
 
