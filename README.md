@@ -1,17 +1,7 @@
-# Banking Sector Loss Distribution Model
+git clone <your-repository-url>
+cd <repository-name>
+```
 
-A sophisticated web-based financial modeling tool for advanced creditor hierarchy and loss distribution analysis.
-
-## Features
-- Interactive scenario-based loss distribution calculations
-- Direct creditor name editing
-- Predefined financial scenarios (FOLTF, Resolution Valuation, Liquidation Valuation)
-- Dynamic visualization of loss absorption
-- Responsive design for precise financial modeling
-
-## Setup Instructions
-
-1. Install Python 3.10 or higher
 2. Install the required packages:
 ```bash
 pip install streamlit streamlit-sortables pandas plotly
@@ -37,17 +27,32 @@ font = "sans serif"
 streamlit run main.py
 ```
 
-The application will be available at `http://localhost:5000`
+## GitHub Deployment Instructions
+
+1. Create a new repository on GitHub
+
+2. Initialize your local repository and push to GitHub:
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin <your-github-repository-url>
+git push -u origin main
+```
+
+3. Deploy to Streamlit Cloud:
+   - Visit [Streamlit Cloud](https://share.streamlit.io/)
+   - Sign in with your GitHub account
+   - Select your repository and branch
+   - Choose `main.py` as the main file
+   - Click "Deploy"
 
 ## Project Structure
-- `main.py`: Main application file
-- `styles.py`: Custom CSS styles
-- `utils.py`: Utility functions
-- `data_models.py`: Data models and default values
-- `.streamlit/config.toml`: Streamlit configuration
-
-## Scenarios
-- **Default**: Manual loss percentage adjustment
-- **FOLTF**: Redistributes 20% of assets to liabilities
-- **Resolution Valuation**: Redistributes 30% of assets to liabilities
-- **Liquidation Valuation**: Redistributes 40% of assets to liabilities
+```
+├── main.py              # Main application file
+├── styles.py            # Custom CSS styles
+├── utils.py             # Utility functions
+├── data_models.py       # Data models and default values
+└── .streamlit/
+    └── config.toml      # Streamlit configuration
