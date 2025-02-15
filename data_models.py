@@ -1,28 +1,34 @@
 # Default creditor types with their properties
 DEFAULT_CREDITORS = {
+    "Asset Absorption": {
+        "color": "#17becf",
+        "priority": 1,
+        "fixed_percentage": 8.0,  # 8% of total assets
+        "system": True  # Flag to identify system-managed creditors
+    },
     "Single Resolution Fund": {
         "color": "#1f77b4",
-        "priority": 1
+        "priority": 2
     },
     "Secured Creditors": {
         "color": "#ff7f0e",
-        "priority": 2
+        "priority": 3
     },
     "Depositors > €100k": {
         "color": "#2ca02c",
-        "priority": 3
+        "priority": 4
     },
     "Senior Unsecured Creditors": {
         "color": "#d62728",
-        "priority": 4
+        "priority": 5
     },
     "Subordinated Debt": {
         "color": "#9467bd",
-        "priority": 5
+        "priority": 6
     },
     "Shareholders": {
         "color": "#8c564b",
-        "priority": 6
+        "priority": 7
     }
 }
 
@@ -30,6 +36,7 @@ DEFAULT_CREDITORS = {
 DEFAULT_BANKS = {
     "Bank A": {
         "total_assets": 1000000000,
+        "Asset Absorption": 80000000,  # 8% of total assets
         "Single Resolution Fund": 50000000,
         "Secured Creditors": 300000000,
         "Depositors > €100k": 250000000,
@@ -39,6 +46,7 @@ DEFAULT_BANKS = {
     },
     "Bank B": {
         "total_assets": 750000000,
+        "Asset Absorption": 60000000,  # 8% of total assets
         "Single Resolution Fund": 37500000,
         "Secured Creditors": 225000000,
         "Depositors > €100k": 187500000,
@@ -48,6 +56,7 @@ DEFAULT_BANKS = {
     },
     "Bank C": {
         "total_assets": 500000000,
+        "Asset Absorption": 40000000,  # 8% of total assets
         "Single Resolution Fund": 25000000,
         "Secured Creditors": 150000000,
         "Depositors > €100k": 125000000,
