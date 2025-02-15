@@ -1,3 +1,7 @@
+git clone <your-repository-url>
+cd <repository-name>
+```
+
 2. Install the required packages:
 ```bash
 pip install streamlit streamlit-sortables pandas plotly
@@ -10,7 +14,7 @@ pip install streamlit streamlit-sortables pandas plotly
 [server]
 headless = true
 address = "0.0.0.0"
-port = 5000
+port = 8501
 
 [theme]
 primaryColor = "#0066cc"
@@ -24,7 +28,7 @@ font = "sans serif"
 ```bash
 streamlit run main.py
 ```
-The application will be available at `http://localhost:5000`
+The application will be available at `http://localhost:8501`
 
 ## Detailed GitHub Deployment Guide
 
