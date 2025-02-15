@@ -84,13 +84,27 @@ def main():
                 """
             )
 
-            loss_percentage = st.slider(
-                "Loss Percentage of Total Assets",
-                min_value=0.0,
-                max_value=100.0,
-                value=10.0,
-                step=1.0
-            )
+            # Loss percentage slider - disabled for non-default scenarios
+            if scenario == "Default":
+                loss_percentage = st.slider(
+                    "Loss Percentage of Total Assets",
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=10.0,
+                    step=1.0
+                )
+            else:
+                # Display disabled slider with fixed value for non-default scenarios
+                st.slider(
+                    "Loss Percentage of Total Assets",
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=20.0,  # Fixed value for scenarios
+                    step=1.0,
+                    disabled=True,
+                    help="Loss percentage is fixed in scenario mode"
+                )
+                loss_percentage = 20.0  # Use fixed value for scenarios
 
             # Creditor hierarchy section
             st.subheader("Creditor Hierarchy")
