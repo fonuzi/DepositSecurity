@@ -53,16 +53,6 @@ def apply_styles():
             text-align: left !important;
             transition: none !important;
         }
-        /* Info message above sortable items */
-        [data-testid="stSidebar"] .stAlert {
-            background-color: #f5f3ff;
-            color: #4338ca;
-            border: none;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
         /* Ensure sidebar maintains width */
         [data-testid="stSidebar"] {
             min-width: 320px;
@@ -78,11 +68,14 @@ def apply_styles():
         .formatted-value {
             font-size: 14px;
             color: #4b5563;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0;
+            display: inline-block;
+            margin-right: 1rem;
         }
         /* Checkbox styling */
         .stCheckbox {
-            margin-top: 0.5rem;
+            margin-top: -0.5rem;
+            display: inline-block;
         }
         .stCheckbox label {
             font-size: 14px;

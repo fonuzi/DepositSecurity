@@ -103,17 +103,19 @@ def main():
                 for creditor in st.session_state.creditor_order:
                     st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
 
-                    col1, col2 = st.columns([3, 1])
+                    # Use a single column for input, formatted value, and checkbox
+                    value = st.number_input(
+                        "Value (EUR)",
+                        value=float(st.session_state.current_bank_data[selected_bank][creditor]),
+                        key=f"value_{creditor}_{selected_bank}",
+                        step=1000000.0,
+                        format="%f",
+                        label_visibility="collapsed"
+                    )
 
+                    # Create a row for formatted value and exempt checkbox
+                    col1, col2 = st.columns([3, 1])
                     with col1:
-                        value = st.number_input(
-                            "Value (EUR)",
-                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
-                            key=f"value_{creditor}_{selected_bank}",
-                            step=1000000.0,
-                            format="%f",
-                            label_visibility="collapsed"
-                        )
                         st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
                         st.session_state.current_bank_data[selected_bank][creditor] = value
 
