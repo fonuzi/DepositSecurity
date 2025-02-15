@@ -103,7 +103,7 @@ def main():
                 for creditor in st.session_state.creditor_order:
                     st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
 
-                    # Use a single column for input, formatted value, and checkbox
+                    # Input field
                     value = st.number_input(
                         "Value (EUR)",
                         value=float(st.session_state.current_bank_data[selected_bank][creditor]),
@@ -113,24 +113,22 @@ def main():
                         label_visibility="collapsed"
                     )
 
-                    # Create a row for formatted value and exempt checkbox
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
-                        st.session_state.current_bank_data[selected_bank][creditor] = value
+                    # Display formatted value
+                    st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
+                    st.session_state.current_bank_data[selected_bank][creditor] = value
 
-                    with col2:
-                        is_exempt = st.checkbox(
-                            "Exempt",
-                            value=creditor in st.session_state.exempt_creditors,
-                            key=f"exempt_{creditor}",
-                            help="Exclude this creditor from loss absorption",
-                            label_visibility="visible"
-                        )
-                        if is_exempt and creditor not in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.add(creditor)
-                        elif not is_exempt and creditor in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.remove(creditor)
+                    # Exempt checkbox
+                    is_exempt = st.checkbox(
+                        "Exempt",
+                        value=creditor in st.session_state.exempt_creditors,
+                        key=f"exempt_{creditor}",
+                        help="Exclude this creditor from loss absorption",
+                        label_visibility="visible"
+                    )
+                    if is_exempt and creditor not in st.session_state.exempt_creditors:
+                        st.session_state.exempt_creditors.add(creditor)
+                    elif not is_exempt and creditor in st.session_state.exempt_creditors:
+                        st.session_state.exempt_creditors.remove(creditor)
 
         # Main content area for Loss Distribution
         if not selected_banks:

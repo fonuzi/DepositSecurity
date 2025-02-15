@@ -68,14 +68,13 @@ def apply_styles():
         .formatted-value {
             font-size: 14px;
             color: #4b5563;
-            margin-bottom: 0;
-            display: inline-block;
-            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+            display: block;
         }
         /* Checkbox styling */
         .stCheckbox {
-            margin-top: -0.5rem;
-            display: inline-block;
+            margin-top: 0;
+            margin-bottom: 1rem;
         }
         /* Fix checkbox alignment */
         .stCheckbox > div[data-testid="stMarkdownContainer"] {
