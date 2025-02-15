@@ -102,16 +102,18 @@ def main():
                         st.write(creditor)
 
                     with col2:
-                        value = st.number_input(
+                        raw_value = st.text_input(
                             "Value (EUR)",
-                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
+                            value=format_currency(st.session_state.current_bank_data[selected_bank][creditor])[1:],  # Remove € symbol
                             key=f"value_{creditor}_{selected_bank}",
-                            step=1000000.0,
-                            format="%f",  # Use float format
                             label_visibility="collapsed"
                         )
-                        st.write(format_currency(value))  # Display formatted value below input
-                        st.session_state.current_bank_data[selected_bank][creditor] = value
+                        # Convert the formatted string back to number
+                        try:
+                            numeric_value = float(raw_value.replace(".", ""))
+                            st.session_state.current_bank_data[selected_bank][creditor] = numeric_value
+                        except ValueError:
+                            st.error(f"Invalid value for {creditor}")
 
                     with col3:
                         is_exempt = st.checkbox(
@@ -123,6 +125,9 @@ def main():
                             st.session_state.exempt_creditors.add(creditor)
                         elif not is_exempt and creditor in st.session_state.exempt_creditors:
                             st.session_state.exempt_creditors.remove(creditor)
+
+                    # Add horizontal line after each creditor
+                    st.markdown("---")
 
         # Main content area for Loss Distribution
         if not selected_banks:
