@@ -53,67 +53,78 @@ def apply_styles():
             text-align: left !important;
             transition: none !important;
         }
-        /* Info message above sortable items */
-        [data-testid="stSidebar"] .stAlert {
-            background-color: #f5f3ff;
-            color: #4338ca;
-            border: none;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
         /* Ensure sidebar maintains width */
         [data-testid="stSidebar"] {
             min-width: 320px;
             max-width: 320px;
         }
-        /* Creditor values styling */
+        /* Creditor name */
         .creditor-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
-            margin-bottom: 1rem;
-            color: #1f2937;
-        }
-        .formatted-value {
-            font-size: 14px;
-            color: #4b5563;
-            margin: 0.5rem 0;
-        }
-        /* Checkbox styling */
-        .stCheckbox {
-            margin-top: 0.25rem;
-        }
-        .stCheckbox label {
-            font-size: 14px;
-            color: #4b5563;
-        }
-        /* Fix checkbox alignment */
-        .stCheckbox > div[data-testid="stMarkdownContainer"] {
-            display: inline-block;
-            margin-left: 0.5rem;
+            color: #262730;
+            margin-bottom: 0.5rem;
         }
         /* Number input styling */
         div[data-testid="stNumberInput"] {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            margin-bottom: 0.25rem;
         }
         div[data-testid="stNumberInput"] input {
             flex: 1;
             padding: 0.5rem;
             border: 1px solid #e5e7eb;
             border-radius: 0.375rem;
+            text-align: right;
+            font-size: 14px;
         }
         div[data-testid="stNumberInput"] button {
-            padding: 0.5rem;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: #f3f4f6;
             border: 1px solid #e5e7eb;
             border-radius: 0.375rem;
+            font-size: 16px;
+            color: #374151;
         }
-        /* Value container spacing */
-        .value-container {
-            margin-bottom: 1.5rem;
+        /* Formatted value */
+        .formatted-value {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        /* Exempt container */
+        .exempt-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+        /* Checkbox styling */
+        .stCheckbox {
+            margin: 0;
+        }
+        .stCheckbox label {
+            font-size: 14px;
+            color: #374151;
+        }
+        .stCheckbox > div[data-testid="stMarkdownContainer"] {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+        /* Info icon */
+        .info-icon {
+            color: #6b7280;
+            cursor: help;
+            font-size: 14px;
+            margin-left: 0.5rem;
         }
         </style>
     """, unsafe_allow_html=True)

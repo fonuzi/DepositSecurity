@@ -14,10 +14,53 @@ def format_currency(value):
     formatted = "{:,.0f}".format(whole_part).replace(",", ".")
     return f"€{formatted}"
 
+def render_creditor_value_input(creditor, bank, step=1000000.0):
+    """Render a creditor value input with the new styling"""
+    current_value = st.session_state.current_bank_data[bank][creditor]
+
+    st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
+
+    cols = st.columns([4, 1])
+
+    with cols[0]:
+        value = st.number_input(
+            "Value (EUR)",
+            value=float(current_value),
+            key=f"value_{creditor}_{bank}",
+            step=step,
+            format="%f",
+            label_visibility="collapsed"
+        )
+        st.markdown(f'<div class="formatted-value">{format_currency(value)}</div>', unsafe_allow_html=True)
+        st.session_state.current_bank_data[bank][creditor] = value
+
+    with cols[1]:
+        # Combine checkbox and info icon in a single container
+        st.markdown(
+            f'''
+            <div class="exempt-container">
+                <span>{creditor in st.session_state.exempt_creditors}</span>
+                <span class="info-icon" title="Information about this creditor">ⓘ</span>
+            </div>
+            ''',
+            unsafe_allow_html=True
+        )
+
+        is_exempt = st.checkbox(
+            "Exempt",
+            value=creditor in st.session_state.exempt_creditors,
+            key=f"exempt_{creditor}",
+            help="Exclude this creditor from loss absorption",
+            label_visibility="visible"
+        )
+
+        if is_exempt and creditor not in st.session_state.exempt_creditors:
+            st.session_state.exempt_creditors.add(creditor)
+        elif not is_exempt and creditor in st.session_state.exempt_creditors:
+            st.session_state.exempt_creditors.remove(creditor)
+
 def render_bank_values():
     st.header("Bank Values")
-
-    # Create DataFrame for bank values display
     data = []
     for bank_name, bank_data in st.session_state.current_bank_data.items():
         row = {}
@@ -30,7 +73,6 @@ def render_bank_values():
     df = pd.DataFrame(data)
     display_df = df.copy()
 
-    # Format all numeric columns
     numeric_cols = [col for col in df.columns if col != "Bank"]
     for col in numeric_cols:
         display_df[col] = df[col].apply(lambda x: format_currency(float(x)))
@@ -101,34 +143,8 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    st.markdown(f'<div class="creditor-name">{creditor}</div>', unsafe_allow_html=True)
+                    render_creditor_value_input(creditor, selected_bank)
 
-                    cols = st.columns([4, 1])
-
-                    with cols[0]:
-                        value = st.number_input(
-                            "Value (EUR)",
-                            value=float(st.session_state.current_bank_data[selected_bank][creditor]),
-                            key=f"value_{creditor}_{selected_bank}",
-                            step=1000000.0,
-                            format="%f",
-                            label_visibility="collapsed"
-                        )
-                        st.markdown(f'<div class="formatted-value">{format_currency(value)}</div>', unsafe_allow_html=True)
-                        st.session_state.current_bank_data[selected_bank][creditor] = value
-
-                    with cols[1]:
-                        is_exempt = st.checkbox(
-                            "Exempt",
-                            value=creditor in st.session_state.exempt_creditors,
-                            key=f"exempt_{creditor}",
-                            help="Exclude this creditor from loss absorption",
-                            label_visibility="visible"
-                        )
-                        if is_exempt and creditor not in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.add(creditor)
-                        elif not is_exempt and creditor in st.session_state.exempt_creditors:
-                            st.session_state.exempt_creditors.remove(creditor)
 
         # Main content area for Loss Distribution
         if not selected_banks:
