@@ -13,7 +13,7 @@ def apply_styles():
             margin-bottom: 1rem;
         }
         .stNumberInput {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
         .st-emotion-cache-1y4p8pa {
             max-width: 100%;
@@ -68,10 +68,33 @@ def apply_styles():
             min-width: 320px;
             max-width: 320px;
         }
-        /* Container for creditor values */
-        .creditor-values-container {
-            margin-top: 2rem;
+        /* Creditor values styling */
+        .creditor-value-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .creditor-value-container h3 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        .creditor-value-container .number-input {
             width: 100%;
+            margin-bottom: 0.25rem;
+        }
+        .creditor-value-container .formatted-value {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+        .creditor-value-container .exempt-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         </style>
     """, unsafe_allow_html=True)

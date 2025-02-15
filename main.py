@@ -101,28 +101,32 @@ def main():
                 st.subheader("Creditor Values")
 
                 for creditor in st.session_state.creditor_order:
-                    col1, col2, col3 = st.columns([2, 2, 1])
+                    st.markdown(f"""
+                        <div class="creditor-value-container">
+                            <h3>{creditor}</h3>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    col1, col2 = st.columns([3, 1])
 
                     with col1:
-                        st.write(creditor)
-
-                    with col2:
                         value = st.number_input(
                             "Value (EUR)",
                             value=float(st.session_state.current_bank_data[selected_bank][creditor]),
                             key=f"value_{creditor}_{selected_bank}",
                             step=1000000.0,
-                            format="%f",  # Use float format
+                            format="%f",
                             label_visibility="collapsed"
                         )
-                        st.write(format_currency(value))  # Display formatted value below input
+                        st.markdown(f'<p class="formatted-value">{format_currency(value)}</p>', unsafe_allow_html=True)
                         st.session_state.current_bank_data[selected_bank][creditor] = value
 
-                    with col3:
+                    with col2:
                         is_exempt = st.checkbox(
                             "Exempt",
                             value=creditor in st.session_state.exempt_creditors,
-                            key=f"exempt_{creditor}"
+                            key=f"exempt_{creditor}",
+                            help="Exclude this creditor from loss absorption"
                         )
                         if is_exempt and creditor not in st.session_state.exempt_creditors:
                             st.session_state.exempt_creditors.add(creditor)
