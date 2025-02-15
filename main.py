@@ -233,8 +233,12 @@ def main():
                     fig.update_xaxes(showticklabels=True)
                     fig.update_yaxes(
                         title_text="Amount (EUR)",
-                        tickformat=".1fM",
-                        ticksuffix="M"
+                        tickformat=",.0f",  # Changed to show whole numbers
+                        tickprefix="",
+                        ticksuffix="M",
+                        # Convert the tick values to millions by dividing by 1M
+                        tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)]
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
