@@ -8,10 +8,13 @@ from styles import apply_styles
 from data_models import DEFAULT_CREDITORS, DEFAULT_BANKS
 
 def format_currency(value):
-    """Format number with thousand separators using dots"""
-    whole_part = int(value)
-    # Format with dots as thousand separators
-    formatted = "{:,.0f}".format(whole_part).replace(",", ".")
+    """Format number in millions with thousand separators using dots"""
+    in_millions = value / 1000000
+    # Format with dots as thousand separators and show millions
+    if in_millions >= 1:
+        formatted = "{:,.1f}M".format(in_millions).replace(",", ".")
+    else:
+        formatted = "{:,.0f}".format(value).replace(",", ".")
     return f"€{formatted}"
 
 def render_bank_values():
