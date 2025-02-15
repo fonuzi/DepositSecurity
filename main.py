@@ -107,7 +107,7 @@ def main():
                             value=float(st.session_state.current_bank_data[selected_bank][creditor]),
                             key=f"value_{creditor}_{selected_bank}",
                             step=1000000.0,
-                            format="%d",  # Use integer format
+                            format="%f",  # Use float format
                             label_visibility="collapsed"
                         )
                         st.write(format_currency(value))  # Display formatted value below input
