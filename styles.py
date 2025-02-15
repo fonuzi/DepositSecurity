@@ -92,5 +92,12 @@ def apply_styles():
             margin: 0 !important;
             padding: 0 !important;
         }
+        /* Creditor divider line */
+        .creditor-divider {
+            border: 0;
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 1rem 0;
+        }
         </style>
     """, unsafe_allow_html=True)

@@ -130,6 +130,10 @@ def main():
                     elif not is_exempt and creditor in st.session_state.exempt_creditors:
                         st.session_state.exempt_creditors.remove(creditor)
 
+                    # Add horizontal line after each creditor except the last one
+                    if creditor != st.session_state.creditor_order[-1]:
+                        st.markdown('<hr class="creditor-divider">', unsafe_allow_html=True)
+
         # Main content area for Loss Distribution
         if not selected_banks:
             st.warning("Please select at least one bank to display.")
