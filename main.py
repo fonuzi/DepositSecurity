@@ -238,7 +238,18 @@ def main():
                         ticksuffix="M",
                         # Convert the tick values to millions by dividing by 1M
                         tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
-                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)]
+                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        col=1  # Only show title on the first column
+                    )
+                    # Remove title from second y-axis
+                    fig.update_yaxes(
+                        title_text="",
+                        tickformat=",.0f",
+                        tickprefix="",
+                        ticksuffix="M",
+                        tickvals=[i * 1000000 for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        ticktext=[f"{i}M" for i in range(0, int(total_assets/1000000) + 1, 100)],
+                        col=2
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
